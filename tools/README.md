@@ -9,3 +9,4 @@ should be reproducible from a script here.
 | `prepare_assets.py` | Trimmed character cutouts, WebP backdrops, copies of brand/icons/rhythm SVGs and fonts, plus `game/assets/derived.json` |
 | `prepare_music.py` | From `design/music/`: loudness-normalised MP3 excerpts and auto-charts for covers, the menu loop, and `game/assets/music/index.json` (credits) |
 | `fetch_music.py` | Used by the manual *Fetch music candidates* workflow to download OpenGameArt pages + files for licence review |
+| `render_instruments.py` | From `design/instruments/GeneralUser-GS.sf2`: per-note MP3 samples for the band and `game/assets/instruments/index.json` |

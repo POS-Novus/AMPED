@@ -76,7 +76,7 @@ window.AmpedComposer = (() => {
     add("keys", beat, 2.5, "pad", { notes: [0, 2, 4].map((i) => note(i, 2)), midi: note(0, 2), accent: true });
 
     events.sort((a, b) => a.beat - b.beat);
-    return { title: song.title, bpm, root, mode, key: keyName(root, mode), beats: beat + 2, sections, events };
+    return { title: song.title, style: STYLES[song.style] ? song.style : "Anthem", bpm, root, mode, key: keyName(root, mode), beats: beat + 2, sections, events };
   }
 
   // Two bars of melody rhythm + contour. Strong beats take chord tones, others step by scale.
