@@ -12,7 +12,11 @@ Mobile and web browser.
 | `game/` | The playable web prototype (HTML/CSS/JS) and its runtime assets |
 | `tools/` | Scripts that prepare runtime assets from the design kit (resize, crop, compress) |
 
-## Run the game
+## Play
+
+Online: https://pos-novus.github.io/AMPED/ (published from `game/` by `.github/workflows/pages.yml` on every push to `main`).
+
+Locally:
 
 ```
 cd game
