@@ -96,9 +96,7 @@ window.AMPED_DATA = {
   costs: { practice: 15, write: 10, gig: 20, restGain: 35, train: 50, trainEnergy: 10 },
 
   rhythm: {
-    bpm: 112,
-    beats: 64,      // song length in beats (about 34 s), after a 4-beat count-in
-    countIn: 4,
+    countIn: 4,     // tempo and length come from each song's arrangement (js/composer.js)
     // seconds either side of the note; gear upgrades will widen these later
     windows: { perfect: 0.045, great: 0.09, good: 0.135 },
     points: { perfect: 300, great: 200, good: 100 },
@@ -107,14 +105,6 @@ window.AMPED_DATA = {
       easy:   { label: "Easy",   travel: 2.0, quarter: 0.55, eighth: 0.0,  chord: 0.0 },
       normal: { label: "Normal", travel: 1.6, quarter: 0.8,  eighth: 0.22, chord: 0.05 },
       hard:   { label: "Hard",   travel: 1.25, quarter: 0.9, eighth: 0.5,  chord: 0.15 }
-    },
-    // which lanes each role's chart leans on (D, F, J, K)
-    laneBias: {
-      drums:  [0.35, 0.35, 0.15, 0.15],
-      bass:   [0.4, 0.3, 0.2, 0.1],
-      guitar: [0.25, 0.25, 0.25, 0.25],
-      vocals: [0.15, 0.3, 0.3, 0.25],
-      keys:   [0.1, 0.2, 0.35, 0.35]
     },
     lanes: [
       { key: "d", color: "var(--cyan)",   note: "assets/rhythm/note-d-circle.svg",   shape: "circle" },

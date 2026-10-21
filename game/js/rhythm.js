@@ -1,45 +1,8 @@
 // Four-lane rhythm gig. Timing comes from the Web Audio clock, never from frame rate.
-// The chart is generated from the song, role and difficulty (deterministic), on a temporary beat.
+// The song is arranged by AmpedComposer; the chart is the notes of the part you play.
 window.AmpedRhythm = (() => {
   const D = () => window.AMPED_DATA.rhythm;
   const reduced = () => document.documentElement.classList.contains("reduce-motion");
-
-  function seeded(str) {
-    let h = 1779033703 ^ str.length;
-    for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
-    return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
-  }
-
-  // Returns [{ beat, lane }] sorted by beat. Beats are counted from the end of the count-in.
-  function makeChart(songId, role, difficulty) {
-    const cfg = D().difficulties[difficulty];
-    const bias = D().laneBias[role] || D().laneBias.guitar;
-    const rnd = seeded(`${songId}|${role}|${difficulty}`);
-    const pickLane = (avoid) => {
-      for (let tries = 0; tries < 6; tries++) {
-        let r = rnd(), lane = 0;
-        while (lane < 3 && r > bias[lane]) { r -= bias[lane]; lane++; }
-        if (lane !== avoid) return lane;
-      }
-      return (avoid + 1 + Math.floor(rnd() * 3)) % 4;
-    };
-    const notes = [];
-    let last = -1, run = 0;
-    const total = D().beats;
-    for (let b = 0; b < total - 2; b++) {
-      const intro = b < 8 ? 0.6 : 1;
-      const add = (beat) => {
-        const avoid = run >= 2 ? last : -1;
-        const lane = pickLane(avoid);
-        run = lane === last ? run + 1 : 0; last = lane;
-        notes.push({ beat, lane });
-        if (rnd() < cfg.chord && b >= 8) notes.push({ beat, lane: (lane + 2) % 4 });
-      };
-      if (b % 4 === 0 || rnd() < cfg.quarter * intro) add(b);
-      if (rnd() < cfg.eighth * intro) add(b + 0.5);
-    }
-    return notes;
-  }
 
   function fmt(sec) { sec = Math.max(0, Math.floor(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; }
 
@@ -51,7 +14,8 @@ window.AmpedRhythm = (() => {
     const assist = 1 + Math.max(0, Math.min(0.25, ((opts.skill || 25) - 25) / 200));
     const win = { perfect: R.windows.perfect * assist, great: R.windows.great * assist, good: R.windows.good * assist };
     const diff = R.difficulties[opts.difficulty];
-    const spb = 60 / R.bpm;
+    const arr = window.AmpedComposer.compose(opts.song);
+    const spb = 60 / arr.bpm;
     const offset = (opts.settings.offsetMs || 0) / 1000;
     const keys = opts.settings.keys || lanes.map((l) => l.key);
 
@@ -76,7 +40,7 @@ window.AmpedRhythm = (() => {
           <div class="rh-hitline"></div>
           <div class="rh-notes" aria-hidden="true"></div>
         </div>
-        <div class="rh-foot"><span data-time></span><span class="rh-temp">Temporary beat · placeholder music</span></div>
+        <div class="rh-foot"><span><span data-time></span> · <span data-section></span></span><span class="rh-temp">Placeholder music · ${esc(arr.key)} · ${arr.bpm} BPM</span></div>
         <div class="rh-overlay" hidden></div>
       </div>`;
 
@@ -88,16 +52,17 @@ window.AmpedRhythm = (() => {
     const scene = window.AmpedScene.mount($(".rh-stage"), { scene: opts.scene, members: opts.members, ambience: false });
     scene.setLive(true);
 
-    const chart = makeChart(opts.song.id, opts.role, opts.difficulty);
+    const chart = window.AmpedComposer.chart(arr, opts.role, opts.difficulty);
     const t0 = A.now() + 0.8;                       // count-in starts here
     const songStart = t0 + R.countIn * spb;
     const notes = chart.map((n) => ({ ...n, t: songStart + n.beat * spb, el: null, done: false }));
     const lastT = notes.length ? notes[notes.length - 1].t : songStart;
-    const songEnd = songStart + R.beats * spb;
-    const stopMusic = A.playTempBeat({ bpm: R.bpm, startAt: t0, countIn: R.countIn, beats: R.beats });
+    const songEnd = songStart + arr.beats * spb;
+    const music = A.playArrangement(arr, t0, R.countIn);
+    const stopMusic = () => music.stop();
 
     const st = { score: 0, streak: 0, maxStreak: 0, crowd: opts.crowdStart || R.crowd.start, counts: { perfect: 0, great: 0, good: 0, miss: 0 }, paused: false, over: false };
-    let raf = 0, finishTimer = 0;
+    let raf = 0, finishTimer = 0, lastSection = "";
 
     // ---------- judging ----------
     const inputTime = () => A.now() - offset;
@@ -125,6 +90,7 @@ window.AmpedRhythm = (() => {
       if (grade === "miss") {
         st.streak = 0;
         A.sfx.miss();
+        music.duck(opts.role);
         laneEls[n.lane].classList.remove("is-miss"); void laneEls[n.lane].offsetWidth; laneEls[n.lane].classList.add("is-miss");
       } else {
         st.streak++;
@@ -191,6 +157,10 @@ window.AmpedRhythm = (() => {
       }
       const songPos = Math.max(0, vis - songStart);
       $("[data-time]").textContent = `${fmt(songPos)} / ${fmt(songEnd - songStart)}`;
+      const beatNow = (vis - songStart) / spb;
+      const sec = arr.sections.filter((x) => x.beat <= beatNow).pop();
+      const secName = beatNow < 0 ? "Count-in" : sec ? sec.name : "";
+      if (secName !== lastSection) { lastSection = secName; $("[data-section]").textContent = secName; }
       if (vis > Math.max(lastT, songEnd) + 0.6 && !finishTimer) finishTimer = setTimeout(finish, 400);
       raf = requestAnimationFrame(frame);
     }
@@ -326,5 +296,5 @@ window.AmpedRhythm = (() => {
 
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
-  return { start, makeChart };
+  return { start };
 })();
