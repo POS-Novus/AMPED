@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AMPED · Band HQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- UI layer: HUD -->
+    <header class="hud">
+      <div class="hud__title">
+        <span class="eyebrow" id="act"></span>
+        <h1 id="band-name"></h1>
+      </div>
+      <ul class="chips" id="resources" aria-label="Resources"></ul>
+    </header>
+
+    <!-- Art layer + interactive hotspots -->
+    <section class="stage" aria-label="Band HQ">
+      <div class="scene" id="scene"></div>
+    </section>
+
+    <!-- UI layer: goal + actions -->
+    <section class="dock">
+      <div class="goal">
+        <div class="goal__row">
+          <span class="goal__label" id="goal-label"></span>
+          <span class="goal__count" id="goal-count"></span>
+        </div>
+        <div class="bar"><div class="bar__fill" id="goal-bar"></div></div>
+      </div>
+      <div class="actions">
+        <button class="btn" data-action="practice">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          Practice
+        </button>
+        <button class="btn" data-action="write">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          Write song
+        </button>
+        <button class="btn btn--primary" data-action="gig">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>
+          Play gig
+        </button>
+      </div>
+    </section>
+
+    <nav class="tabbar" aria-label="Main">
+      <a href="#" aria-current="page">HQ</a>
+      <a href="#">Shop</a>
+      <a href="#">Map</a>
+      <a href="#">Band</a>
+      <a href="#">Fests</a>
+    </nav>
+
+    <!-- UI layer: member sheet -->
+    <aside class="sheet" id="sheet" hidden aria-labelledby="sheet-name">
+      <div class="sheet__head">
+        <span class="sheet__dot" id="sheet-dot"></span>
+        <div>
+          <h2 id="sheet-name"></h2>
+          <span class="eyebrow" id="sheet-role"></span>
+        </div>
+        <button class="icon-btn" id="sheet-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="sheet__bio" id="sheet-bio"></p>
+      <dl class="stats" id="sheet-stats"></dl>
+      <div class="sheet__actions">
+        <button class="btn" id="sheet-train"></button>
+        <button class="btn" id="sheet-rest">Rest</button>
+      </div>
+    </aside>
+
+    <dialog class="result" id="result" aria-labelledby="result-title">
+      <span class="eyebrow">Gig result</span>
+      <h2 id="result-title"></h2>
+      <div class="stars" id="result-stars" aria-hidden="true"></div>
+      <dl class="result__grid" id="result-grid"></dl>
+      <p class="result__note">Rhythm game goes here. For now the score comes from band stats.</p>
+      <button class="btn btn--primary" id="result-close">Back to HQ</button>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
