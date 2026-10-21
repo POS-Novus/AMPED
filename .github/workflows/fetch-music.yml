@@ -1,0 +1,25 @@
+# Manually run: downloads candidate music pages + files so their licences can be checked.
+# Nothing is committed; results are uploaded as a workflow artifact.
+name: Fetch music candidates
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "Space-separated OpenGameArt page URLs"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/fetch_music.py out ${{ inputs.urls }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: music-candidates
+          path: out
+          retention-days: 3
