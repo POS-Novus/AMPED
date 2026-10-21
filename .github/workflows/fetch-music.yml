@@ -1,5 +1,5 @@
 # Manually run: downloads candidate music pages + files so their licences can be checked.
-# Nothing is committed; results are uploaded as a workflow artifact.
+# Results go to a DRAFT release (visible to repository collaborators only), nothing is committed.
 name: Fetch music candidates
 
 on:
@@ -10,7 +10,7 @@ on:
         required: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   fetch:
@@ -20,8 +20,10 @@ jobs:
       - env:
           URLS: ${{ inputs.urls }}
         run: python3 tools/fetch_music.py out $URLS
-      - uses: actions/upload-artifact@v4
-        with:
-          name: music-candidates
-          path: out
-          retention-days: 3
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (cd out && zip -qr ../music-candidates.zip .)
+          gh release view music-candidates >/dev/null 2>&1 || \
+            gh release create music-candidates --draft --title "Music candidates (private draft)" --notes "Downloaded for licence review. Not for release."
+          gh release upload music-candidates music-candidates.zip --clobber
