@@ -1,56 +1,68 @@
-# AMPED · prototype
+# AMPED: playable first slice
 
-A playable Band HQ screen that shows how the game splits **art** from **code**.
+Plain HTML/CSS/JavaScript. No build step, no dependencies.
 
 ```
-amped/
-  index.html        page structure (HUD, scene, actions, member sheet)
-  styles.css        UI look: colours, panels, buttons, layout
-  js/data.js        all game content: band, members, stats, hotspots, costs
-  js/main.js        game logic: actions, saving, rendering
-  assets/scenes/    artwork only (no text, no UI baked in)
+cd game
+python3 -m http.server 8000      # then open http://localhost:8000
 ```
+Opening `index.html` straight from disk will not work (browsers block loading the art that way).
 
-Run it: `python3 -m http.server` in this folder, then open http://localhost:8000.
+## The loop
 
-## How the screen is built
+Title → **Garage HQ** → practise / write a song / rest → **Book the pub** → pick song, part and difficulty →
+timing check (first time) → **rhythm gig on the pub stage** → **results** (rewards, review, goal progress) → saved → back to HQ.
 
-| Layer | What it is | Who changes it |
-|---|---|---|
-| 1. Scene art | `assets/scenes/garage_t1.webp` | Artist |
-| 2. Hotspots | Invisible tap areas over each character, positioned in `data.js` as % of the image | Code |
-| 3. Name tags + energy bars | Drawn in HTML on top of the art | Code |
-| 4. HUD, goal, buttons, member sheet | Plain HTML/CSS | Code |
+Controls in a gig: **D F J K** (remappable in Settings) or tap the lanes. **Esc** or **P** pauses.
+The game also pauses when the tab is hidden or the window loses focus.
 
-Text, numbers, stats and buttons are never painted into the art, so they can change freely.
+## Files
 
-## Delivering art
+| File | What it does |
+|---|---|
+| `index.html` | Title screen, app frame (header, resources, view, tab bar), dialogs |
+| `css/tokens.css` | Copied unchanged from `design/kit/design/tokens.css` |
+| `css/app.css` | All UI styling, built on the kit tokens; DejaVu Sans from the kit |
+| `js/data.js` | Content and tuning: members, scene layouts, venue, songwriting, costs, rhythm settings |
+| `js/audio.js` | Web Audio clock, **temporary synthesised beat**, metronome, SFX |
+| `js/scene.js` | Backdrop + band placement + ambience (rain, light flicker, dust, notes) |
+| `js/rhythm.js` | Chart generation, judging on the audio clock, HUD, pause, fail |
+| `js/main.js` | State, saving, views (HQ, Band, Music, Gigs, Shop), sheets, calibration, rewards |
+| `assets/` | Runtime copies made by `tools/prepare_assets.py` from `design/kit/` (see `assets/derived.json`) |
 
-**Scenes (backgrounds)**
-- 1536 × 1024 (3:2) minimum; 3072 × 2048 preferred for sharp phones. Export as `.webp`.
-- Name: `<location>_t<tier>.webp`, e.g. `garage_t1.webp`, `rehearsal_t2.webp`.
-- No text, logos or UI in the image (posters can have shapes, but no readable words the game needs).
-- Keep ~8% at the top and bottom free of important detail; the HUD and buttons sit there on wide screens.
+To rebuild the assets: `python3 tools/prepare_assets.py` from the repository root (needs Pillow).
 
-**Characters (when separated from the scene)**
-- Transparent `.png` or `.webp`, one file per pose: `characters/<id>/<pose>.png` (e.g. `nia/idle.png`, `nia/play.png`, `nia/cheer.png`).
-- Same canvas size for every pose of a character, feet at the same baseline, so swapping poses doesn't jump.
-- For animation, deliver layered PSD for Spine/Live2D rigging.
+## Status (milestones 1–2 from the handoff)
 
-**Layered scenes (target for final game)**
-Export each scene as separate same-size layers, all aligned:
-1. `background`: room/walls/outside view
-2. `props`: furniture and gear (swappable when upgrades are bought)
-3. *(characters are placed by code)*
-4. `light`: glow and light overlay (can animate/flicker)
-5. `foreground`: objects in front of characters (amps, cases)
+### Implemented
+- Kit colours, spacing, radii, DejaVu Sans, real wordmark, app icon, 41 icons recoloured in code
+- Title screen (key art, Continue / New game with overwrite confirmation)
+- HQ on the empty garage backdrop with the five kit characters, placed by role with foot baselines
+- Band roster and member sheet (stats, energy, morale, lesson, nap)
+- Songwriting: title, theme, style, hidden combo bonuses, song list with quality and practice level
+- Gig booking at the pub: song, part (each role has its own chart), difficulty, costs, tired-member blocking
+- Rhythm gig: four lanes with the kit note shapes, hit line, ring/burst effects, crowd energy, score, streak multiplier, judgements, time, pause/resume with countdown, leave stage, booed off at 0 crowd
+- Timing calibration (tap test on the audio clock) and manual offset; skippable before a gig
+- Results: stars, review, accuracy, best streak, counts, cash/fans/hype/fame, goal progress, back to HQ / play again
+- Practice warms the starting crowd; the played member's skill widens timing windows slightly
+- Save in the browser (`amped.save.v3`), reload-safe; rewards applied once per gig id
+- Settings: music and SFX volume, timing offset, calibration, key remapping, motion (device/reduce/full), reset progress
+- Reduced motion: ambience, character motion and effects off; notes still move (gameplay)
 
-**Icons and UI art**
-- Gear icons 512 × 512 transparent, same lighting and outline style as the scenes.
-- UI frames/buttons are built in code; only send decorative art (textures, badges) if wanted.
+### Tested (headless Chromium, 390×844, 844×390 landscape, 1440×900)
+- Full loop end to end with an automated player; save and reload keep cash, fans, day, songs, energy
+- Pause / resume; leaving mid-gig changes nothing; failing pays nothing, costs 3 fans, 8 hype and the energy
+- Two gigs in a row; no double payout; no failed requests or script errors
+- Not tested on real phones or with real players yet. Audio latency on Bluetooth headphones untested.
 
-## Adding a new scene
+### Remaining (not done)
+- **Music**: the beat is a placeholder made in code. Real songs, charts authored to them, SFX and voices are needed.
+- **Animation**: characters are static cutouts with whole-sprite bob/sway only. Needed: idle, play, celebrate, tired, frustrated poses or rigs; seated drummer + kit; portrait expressions.
+- **Story**: Moira tutorial, uncle's note, choices (story-cast sheet needs individual portrait crops).
+- **Gear shop** (locked screen only), more venues, HQ tiers, festivals, multiplayer, accounts.
+- **Rhythm**: sustain notes (only a cyan tail exists in the kit), per-lane tail colours, gear effects on timing.
+- **Balance**: all prices, rewards and crowd numbers are working values. Hard difficulty loses an idle crowd in ~4 s.
+- **Accessibility review** with a screen reader; larger text settings.
 
-1. Drop the image in `assets/scenes/`.
-2. In `js/data.js`, set `scene.layers[0].src` to it.
-3. Adjust each member's `hotspot` and `tag` (percent of image width/height).
+### Blocked
+- Nothing blocked. Music sourcing is a separate decision (composer or licensed library).

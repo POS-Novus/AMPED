@@ -1,79 +1,135 @@
-// Game content. Art lives in assets/, everything the player reads lives here.
-// Hotspots and tags are percentages of the scene image, so they survive any resize.
+// Game content and tuning. Art paths point at runtime copies made by tools/prepare_assets.py.
+// Positions in scenes are percentages of the backdrop (3:2), so they track the art at any size.
+// Names, prices and numbers here are working values, not approved balance.
 window.AMPED_DATA = {
-  band: { name: "The Static Kids", act: 1, actTitle: "The Garage" },
+  saveVersion: 3,
 
-  resources: { cash: 250, fans: 12, fame: 1, hype: 20, day: 1 },
-
-  goal: { label: "Play 10 pub gigs", target: 10, progress: 0 },
-
-  scene: {
-    id: "garage_t1",
-    name: "The Garage",
-    width: 1536,
-    height: 1024,
-    // Back to front. Characters are placed by code from each member's `sprite`.
-    bpm: 112,
-    layers: [
-      // Placeholder: the old scene blurred into a backdrop until an empty garage painting exists.
-      { src: "assets/scenes/garage_t1.webp", alt: "", backdrop: true }
-    ],
-    // Ambient effects drawn by code on top of the art (all in % of the image).
-    fx: {
-      rain: { x: 0, y: 0, w: 27, h: 62 },
-      dust: { x: 30, y: 5, w: 70, h: 70 },
-      lights: [
-        { x: 49.6, y: 10, size: 12, color: "rgba(255, 196, 110, 0.55)" },
-        { x: 58, y: 9, size: 12, color: "rgba(255, 196, 110, 0.55)" },
-        { x: 69.2, y: 5.5, size: 10, color: "rgba(255, 196, 110, 0.5)" },
-        { x: 94, y: 11, size: 18, color: "rgba(255, 210, 140, 0.45)" },
-        { x: 14, y: 17.5, size: 8, color: "rgba(255, 220, 150, 0.5)" },
-        { x: 18.8, y: 24.5, size: 6, color: "rgba(255, 220, 150, 0.45)" }
-      ]
-    }
-  },
+  band: { name: "The Static Kids" },
+  start: { cash: 120, fans: 12, fame: 1, hype: 20, day: 1 },
+  goal: { label: "Pub gigs", target: 10 },
 
   members: [
-    {
-      id: "roxy", name: "Roxy", role: "Vocals", color: "#FF4F9A",
-      sprite: { src: "assets/characters/roxy/idle.webp", x: 15, y: 93, h: 66, z: 3, anim: "sing" },
-      stats: { skill: 22, presence: 41, creativity: 28, ego: 35, stamina: 30 },
-      energy: 90, morale: 85,
-      bio: "Loud, fearless, the band's heart."
-    },
-    {
-      id: "nia", name: "Nia", role: "Lead guitar", color: "#FFC857",
-      sprite: { src: "assets/characters/nia/idle.webp", x: 49, y: 99, h: 70, z: 5, anim: "guitar" },
-      stats: { skill: 34, presence: 30, creativity: 31, ego: 20, stamina: 33 },
-      energy: 95, morale: 90,
-      bio: "Your uncle's note is in that jacket pocket. Play Solstice."
-    },
-    {
-      id: "saoirse", name: "Saoirse", role: "Drums", color: "#FF8A4C",
-      sprite: { src: "assets/characters/saoirse/idle.webp", x: 31, y: 84, h: 58, z: 1, anim: "drum" },
-      stats: { skill: 27, presence: 24, creativity: 18, ego: 15, stamina: 40 },
-      energy: 80, morale: 95,
-      bio: "Chaotic joy. Has never once played quietly."
-    },
-    {
-      id: "theo", name: "Theo", role: "Bass", color: "#3CCFCF",
-      sprite: { src: "assets/characters/theo/idle.webp", x: 70, y: 90, h: 64, z: 2, anim: "sway" },
-      stats: { skill: 25, presence: 18, creativity: 22, ego: 8, stamina: 31 },
-      energy: 85, morale: 88,
-      bio: "The calm one. Keeps band drama down."
-    },
-    {
-      id: "mika", name: "Mika", role: "Keys", color: "#B79CFF",
-      sprite: { src: "assets/characters/mika/idle.webp", x: 88, y: 92, h: 62, z: 4, anim: "keys" },
-      stats: { skill: 29, presence: 15, creativity: 38, ego: 12, stamina: 26 },
-      energy: 75, morale: 80,
-      bio: "Quiet studio genius. Already producing the demo."
-    }
+    { id: "roxy", name: "Roxy", role: "vocals", roleLabel: "Vocals", color: "var(--pink)",
+      sprite: "assets/characters/band-vocals.webp", aspect: 0.5344, anim: "sing", line: "Mic check, one two",
+      stats: { skill: 22, presence: 41, creativity: 28, ego: 35, stamina: 30 }, energy: 90, morale: 85,
+      bio: "Loud, fearless, the band's heart." },
+    { id: "saoirse", name: "Saoirse", role: "drums", roleLabel: "Drums", color: "var(--green)",
+      sprite: "assets/characters/band-drums.webp", aspect: 0.5122, anim: "drum", line: "Always one beat ahead",
+      stats: { skill: 27, presence: 24, creativity: 18, ego: 15, stamina: 40 }, energy: 80, morale: 95,
+      bio: "Chaotic joy. Has never once played quietly." },
+    { id: "nia", name: "Nia", role: "guitar", roleLabel: "Guitar", color: "var(--yellow)",
+      sprite: "assets/characters/band-guitar.webp", aspect: 0.71, anim: "guitar", line: "Ready to shred",
+      stats: { skill: 34, presence: 30, creativity: 31, ego: 20, stamina: 33 }, energy: 95, morale: 90,
+      bio: "Your uncle's note is in that jacket pocket. Play Solstice." },
+    { id: "theo", name: "Theo", role: "bass", roleLabel: "Bass", color: "var(--cyan)",
+      sprite: "assets/characters/band-bass.webp", aspect: 0.56, anim: "sway", line: "Calm in the chaos",
+      stats: { skill: 25, presence: 18, creativity: 22, ego: 8, stamina: 31 }, energy: 85, morale: 88,
+      bio: "The calm one. Keeps band drama down." },
+    { id: "mika", name: "Mika", role: "keys", roleLabel: "Keys / Producer", color: "var(--violet)",
+      sprite: "assets/characters/band-keys.webp", aspect: 0.4233, anim: "keys", line: "Session wizard",
+      stats: { skill: 29, presence: 15, creativity: 38, ego: 12, stamina: 26 }, energy: 75, morale: 80,
+      bio: "Quiet studio genius. Already producing the demo." }
   ],
 
-  statLabels: {
-    skill: "Skill", presence: "Stage presence", creativity: "Creativity", ego: "Ego", stamina: "Stamina"
+  statLabels: { skill: "Skill", presence: "Stage presence", creativity: "Creativity", ego: "Ego", stamina: "Stamina" },
+
+  scenes: {
+    garage: {
+      src: "assets/world/hq-garage-backdrop.webp",
+      label: "Garage · Level 1",
+      // where each role stands (feet at y)
+      slots: {
+        vocals: { x: 20, y: 95, h: 58, z: 3 },
+        drums:  { x: 35, y: 88, h: 52, z: 1 },
+        guitar: { x: 51, y: 99, h: 62, z: 5 },
+        bass:   { x: 67, y: 92, h: 57, z: 2 },
+        keys:   { x: 83, y: 95, h: 55, z: 4 }
+      },
+      fx: {
+        rain: { x: 3, y: 5, w: 21, h: 53 },
+        dust: { x: 28, y: 12, w: 70, h: 55 },
+        lights: [
+          { x: 39, y: 24, size: 9, color: "rgba(255, 200, 110, 0.55)" },
+          { x: 45.5, y: 29, size: 8, color: "rgba(255, 200, 110, 0.5)" },
+          { x: 69.5, y: 29.5, size: 8, color: "rgba(255, 200, 110, 0.5)" },
+          { x: 79.3, y: 24.5, size: 9, color: "rgba(255, 200, 110, 0.55)" },
+          { x: 90.7, y: 23, size: 9, color: "rgba(255, 200, 110, 0.5)" },
+          { x: 48.5, y: 36, size: 12, color: "rgba(255, 214, 140, 0.45)" },
+          { x: 87, y: 42, size: 12, color: "rgba(255, 214, 140, 0.45)" }
+        ]
+      }
+    },
+    pub: {
+      src: "assets/world/venue-pub-backdrop.webp",
+      slots: {
+        vocals: { x: 36, y: 58, h: 27, z: 3 },
+        drums:  { x: 44, y: 55, h: 23, z: 1 },
+        guitar: { x: 52, y: 59.5, h: 29, z: 5 },
+        bass:   { x: 60, y: 56.5, h: 26, z: 2 },
+        keys:   { x: 67, y: 58, h: 25, z: 4 }
+      },
+      fx: {
+        lights: [
+          { x: 39.5, y: 9, size: 10, color: "rgba(255, 200, 110, 0.5)" },
+          { x: 69, y: 9, size: 10, color: "rgba(255, 200, 110, 0.5)" },
+          { x: 7, y: 17, size: 9, color: "rgba(255, 200, 110, 0.45)" },
+          { x: 95.5, y: 17, size: 9, color: "rgba(255, 200, 110, 0.45)" }
+        ]
+      }
+    }
   },
 
-  costs: { practiceEnergy: 15, gigEnergy: 25, trainCash: 50, trainEnergy: 10 }
+  venues: {
+    pub: { id: "pub", name: "The Crane Bar", scene: "pub", capacity: 80, ticket: 6, tags: ["Open mic", "80 capacity"] }
+  },
+
+  songwriting: {
+    themes: ["Love", "Rebellion", "Party", "Heartbreak"],
+    styles: ["Ballad", "Anthem", "Banger"],
+    // hidden bonuses the player discovers
+    combos: { "Rebellion|Anthem": 18, "Heartbreak|Ballad": 16, "Party|Banger": 16, "Love|Ballad": 8 }
+  },
+  starterSongs: [
+    { id: "s-start", title: "Garage Anthem", theme: "Rebellion", style: "Anthem", quality: 32, practice: 0 }
+  ],
+
+  costs: { practice: 15, write: 10, gig: 20, restGain: 35, train: 50, trainEnergy: 10 },
+
+  rhythm: {
+    bpm: 112,
+    beats: 64,      // song length in beats (about 34 s), after a 4-beat count-in
+    countIn: 4,
+    // seconds either side of the note; gear upgrades will widen these later
+    windows: { perfect: 0.045, great: 0.09, good: 0.135 },
+    points: { perfect: 300, great: 200, good: 100 },
+    crowd: { start: 60, perfect: 2, great: 1.5, good: 0.5, miss: -6 },
+    difficulties: {
+      easy:   { label: "Easy",   travel: 2.0, quarter: 0.55, eighth: 0.0,  chord: 0.0 },
+      normal: { label: "Normal", travel: 1.6, quarter: 0.8,  eighth: 0.22, chord: 0.05 },
+      hard:   { label: "Hard",   travel: 1.25, quarter: 0.9, eighth: 0.5,  chord: 0.15 }
+    },
+    // which lanes each role's chart leans on (D, F, J, K)
+    laneBias: {
+      drums:  [0.35, 0.35, 0.15, 0.15],
+      bass:   [0.4, 0.3, 0.2, 0.1],
+      guitar: [0.25, 0.25, 0.25, 0.25],
+      vocals: [0.15, 0.3, 0.3, 0.25],
+      keys:   [0.1, 0.2, 0.35, 0.35]
+    },
+    lanes: [
+      { key: "d", color: "var(--cyan)",   note: "assets/rhythm/note-d-circle.svg",   shape: "circle" },
+      { key: "f", color: "var(--yellow)", note: "assets/rhythm/note-f-diamond.svg",  shape: "diamond" },
+      { key: "j", color: "var(--pink)",   note: "assets/rhythm/note-j-square.svg",   shape: "square" },
+      { key: "k", color: "var(--violet)", note: "assets/rhythm/note-k-triangle.svg", shape: "triangle" }
+    ]
+  },
+
+  reviews: {
+    fail: "Booed off. The landlord wants the stage back.",
+    1: "\"They turned up. That's something.\"",
+    2: "\"Rough edges, but there's a band in there.\"",
+    3: "\"A solid set. The regulars nodded along.\"",
+    4: "\"The whole pub was singing by the end.\"",
+    5: "\"Legendary. People will lie about being here.\""
+  }
 };

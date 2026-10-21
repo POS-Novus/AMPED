@@ -1,0 +1,146 @@
+{
+  "source": "design/kit (AMPED design kit v1)",
+  "script": "tools/prepare_assets.py",
+  "files": [
+    {
+      "id": "band-guitar",
+      "path": "assets/characters/band-guitar.webp",
+      "from": "assets/characters/band-guitar.png",
+      "trimBounds": [
+        163,
+        23,
+        1116,
+        1365
+      ],
+      "size": [
+        639,
+        900
+      ],
+      "aspect": 0.71,
+      "pivot": "bottom-centre (feet)",
+      "process": "trim alpha>20, resize to 900px high, webp q90"
+    },
+    {
+      "id": "band-vocals",
+      "path": "assets/characters/band-vocals.webp",
+      "from": "assets/characters/band-vocals.png",
+      "trimBounds": [
+        110,
+        23,
+        904,
+        1509
+      ],
+      "size": [
+        481,
+        900
+      ],
+      "aspect": 0.5344,
+      "pivot": "bottom-centre (feet)",
+      "process": "trim alpha>20, resize to 900px high, webp q90"
+    },
+    {
+      "id": "band-bass",
+      "path": "assets/characters/band-bass.webp",
+      "from": "assets/characters/band-bass.png",
+      "trimBounds": [
+        184,
+        52,
+        993,
+        1496
+      ],
+      "size": [
+        504,
+        900
+      ],
+      "aspect": 0.56,
+      "pivot": "bottom-centre (feet)",
+      "process": "trim alpha>20, resize to 900px high, webp q90"
+    },
+    {
+      "id": "band-drums",
+      "path": "assets/characters/band-drums.webp",
+      "from": "assets/characters/band-drums.png",
+      "trimBounds": [
+        155,
+        29,
+        917,
+        1517
+      ],
+      "size": [
+        461,
+        900
+      ],
+      "aspect": 0.5122,
+      "pivot": "bottom-centre (feet)",
+      "process": "trim alpha>20, resize to 900px high, webp q90"
+    },
+    {
+      "id": "band-keys",
+      "path": "assets/characters/band-keys.webp",
+      "from": "assets/characters/band-keys.png",
+      "trimBounds": [
+        226,
+        82,
+        828,
+        1503
+      ],
+      "size": [
+        381,
+        900
+      ],
+      "aspect": 0.4233,
+      "pivot": "bottom-centre (feet)",
+      "process": "trim alpha>20, resize to 900px high, webp q90"
+    },
+    {
+      "id": "hq-garage-backdrop",
+      "path": "assets/world/hq-garage-backdrop.webp",
+      "from": "assets/world/hq-garage-backdrop.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "process": "webp q86, no resize"
+    },
+    {
+      "id": "venue-pub-backdrop",
+      "path": "assets/world/venue-pub-backdrop.webp",
+      "from": "assets/world/venue-pub-backdrop.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "process": "webp q86, no resize"
+    },
+    {
+      "id": "keyart-garage",
+      "path": "assets/world/keyart-garage.webp",
+      "from": "assets/marketing/keyart-garage.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "process": "webp q86, no resize"
+    },
+    {
+      "folder": "assets/brand/",
+      "from": "assets/brand/",
+      "process": "copied unchanged"
+    },
+    {
+      "folder": "assets/icons/",
+      "from": "assets/icons/",
+      "process": "copied unchanged"
+    },
+    {
+      "folder": "assets/rhythm/",
+      "from": "assets/rhythm/",
+      "process": "copied unchanged"
+    },
+    {
+      "folder": "assets/fonts/",
+      "from": "assets/fonts/",
+      "process": "copied unchanged, licence included"
+    }
+  ]
+}

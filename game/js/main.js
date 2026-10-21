@@ -1,60 +1,91 @@
 (() => {
   const DATA = window.AMPED_DATA;
-  const SAVE_KEY = "amped.save.v2";
-  const $ = (id) => document.getElementById(id);
-
-  const ICONS = {
-    cash: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10"/>',
-    fans: '<circle cx="9" cy="7" r="4"/><path d="M16 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1M22 20v-1a4 4 0 0 0-3-3.9"/>',
-    fame: '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
-    hype: '<path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 2 1 3 3 3 3s0-4 0-7z"/>',
-    day: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
-  };
-  const RESOURCE_VIEW = [
-    { key: "cash", color: "var(--amber)", fmt: (v) => "€" + v.toLocaleString() },
-    { key: "fans", color: "var(--teal)", fmt: (v) => v.toLocaleString() + " fans" },
-    { key: "fame", color: "var(--magenta)", fmt: (v) => "Fame " + v },
-    { key: "hype", color: "#FF8A4C", fmt: (v) => v + "% hype" },
-    { key: "day", color: "var(--lilac)", fmt: (v) => "Day " + v }
-  ];
+  const A = window.AmpedAudio;
+  const SAVE_KEY = "amped.save.v3";
+  const $ = (sel, el = document) => el.querySelector(sel);
+  const icon = (name) => `<span class="icon" style="-webkit-mask-image:url(assets/icons/${name}.svg);mask-image:url(assets/icons/${name}.svg)"></span>`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
 
   // ---------- state ----------
-  const fresh = () => JSON.parse(JSON.stringify({
-    band: DATA.band, resources: DATA.resources, goal: DATA.goal, members: DATA.members, songs: []
-  }));
-
-  let state = load() || fresh();
-  state.members.forEach((m) => {
-    const def = DATA.members.find((d) => d.id === m.id);
-    m.sprite = def.sprite;
-    m.tag = { x: def.sprite.x, y: def.sprite.y - def.sprite.h - 1 };
-  });
-  let openMemberId = null;
-
+  function fresh() {
+    return {
+      v: DATA.saveVersion,
+      band: { ...DATA.band },
+      res: { ...DATA.start },
+      members: DATA.members.map((m) => ({ id: m.id, stats: { ...m.stats }, energy: m.energy, morale: m.morale })),
+      songs: DATA.starterSongs.map((s) => ({ ...s })),
+      gigs: { played: 0, wins: 0, best: 0, lastId: null },
+      next: { song: DATA.starterSongs[0].id, role: "guitar", difficulty: "easy" },
+      settings: { music: 0.7, sfx: 0.8, offsetMs: 0, calibrated: false, keys: ["d", "f", "j", "k"], motion: "system" }
+    };
+  }
   function load() {
-    try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch { return null; }
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+      return s && s.v === DATA.saveVersion ? s : null;
+    } catch { return null; }
   }
   function save() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* private mode: play without saving */ }
   }
 
-  const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
-  const avg = (key) => state.members.reduce((s, m) => s + m.stats[key], 0) / state.members.length;
-  const member = (id) => state.members.find((m) => m.id === id);
+  let state = load() || fresh();
+  let view = "hq";
+  let hqScene = null;
 
-  // ---------- render ----------
-  const shown = {};
-  function buildChips() {
-    $("resources").innerHTML = RESOURCE_VIEW.map((r) => `
-      <li class="chip" data-chip="${r.key}" style="color:${r.color}">
-        <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[r.key]}</svg>
-        <span style="color:var(--ink)">${r.fmt(state.resources[r.key])}</span>
-      </li>`).join("");
-    RESOURCE_VIEW.forEach((r) => { shown[r.key] = state.resources[r.key]; });
+  const def = (id) => DATA.members.find((m) => m.id === id);
+  const members = () => state.members.map((m) => ({ ...def(m.id), ...m }));
+  const member = (id) => members().find((m) => m.id === id);
+  const raw = (id) => state.members.find((m) => m.id === id);
+  const avg = (key) => state.members.reduce((s, m) => s + m.stats[key], 0) / state.members.length;
+  const avgEnergy = () => Math.round(state.members.reduce((s, m) => s + m.energy, 0) / state.members.length);
+  const minEnergy = () => Math.min(...state.members.map((m) => m.energy));
+  const tired = (cost) => state.members.filter((m) => m.energy < cost).map((m) => def(m.id).name);
+  const song = (id) => state.songs.find((s) => s.id === id) || state.songs[0];
+
+  // ---------- motion & audio settings ----------
+  function applySettings() {
+    const sysReduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = state.settings.motion === "reduce" || (state.settings.motion === "system" && sysReduce);
+    document.documentElement.classList.toggle("reduce-motion", reduce);
+    A.setVolumes(state.settings.music, state.settings.sfx);
   }
 
+  // ---------- shell ----------
+  const TITLES = {
+    hq: "Home, loud home.", band: "Your band.", gigs: "Book a gig.", music: "Make some noise.", shop: "Better gear."
+  };
+  const RESOURCES = [
+    { key: "cash", icon: "cash", label: "Cash", fmt: (v) => "€" + v.toLocaleString() },
+    { key: "fans", icon: "fans", label: "Fans", fmt: (v) => v.toLocaleString() },
+    { key: "fame", icon: "fame", label: "Fame level", fmt: (v) => String(v) },
+    { key: "energy", icon: "energy", label: "Band energy", fmt: (v) => v + "%" }
+  ];
+  const shown = {};
+  const resValue = (key) => (key === "energy" ? avgEnergy() : state.res[key]);
+
+  function buildResources() {
+    $("#resources").innerHTML = RESOURCES.map((r) => `
+      <li class="res" data-res="${r.key}">${icon(r.icon)}<span class="sr-only">${r.label}: </span><span data-val>${r.fmt(resValue(r.key))}</span></li>`).join("");
+    RESOURCES.forEach((r) => { shown[r.key] = resValue(r.key); });
+  }
+  function updateResources() {
+    RESOURCES.forEach((r) => {
+      const el = $(`[data-res="${r.key}"]`);
+      const from = shown[r.key], to = resValue(r.key);
+      if (from === to) return;
+      tween($("[data-val]", el), from, to, r.fmt);
+      const pop = document.createElement("span");
+      pop.className = "res-pop " + (to > from ? "up" : "down");
+      pop.textContent = (to > from ? "+" : "") + (to - from);
+      el.appendChild(pop);
+      setTimeout(() => pop.remove(), 1200);
+      shown[r.key] = to;
+    });
+  }
   function tween(el, from, to, fmt) {
-    const start = performance.now(), dur = 700;
+    const start = performance.now(), dur = 600;
     const step = (now) => {
       const t = Math.min(1, (now - start) / dur);
       el.textContent = fmt(Math.round(from + (to - from) * (1 - Math.pow(1 - t, 3))));
@@ -63,224 +94,553 @@
     requestAnimationFrame(step);
   }
 
-  function renderScene() {
-    const scene = $("scene");
-    scene.innerHTML = "";
-    scene.style.setProperty("--beat", (60 / (DATA.scene.bpm || 110)) + "s");
-    const cam = document.createElement("div");
-    cam.className = "cam";
-    scene.appendChild(cam);
-    DATA.scene.layers.forEach((layer) => {
-      const img = document.createElement("img");
-      img.src = layer.src;
-      img.alt = layer.alt || "";
-      img.draggable = false;
-      if (layer.backdrop) img.className = "backdrop";
-      cam.appendChild(img);
+  function commit() { save(); updateResources(); }
+
+  function go(next, focus) {
+    if (hqScene) { hqScene.stop(); hqScene = null; }
+    view = next;
+    $("#head-eyebrow").textContent = state.band.name;
+    $("#head-title").textContent = TITLES[view];
+    document.querySelectorAll("[data-tab]").forEach((b) => {
+      const on = b.dataset.tab === view;
+      b.classList.toggle("is-active", on);
+      if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
     });
-    FX.init(cam, document.querySelector(".stage"), DATA.scene);
-
-    state.members.forEach((m) => {
-      const sp = m.sprite;
-      // Wrapper places the character (feet on the baseline); body handles the animation.
-      const actor = document.createElement("button");
-      actor.className = "actor";
-      actor.dataset.member = m.id;
-      actor.setAttribute("aria-label", `${m.name}, ${m.role}`);
-      Object.assign(actor.style, { left: sp.x + "%", bottom: (100 - sp.y) + "%", height: sp.h + "%", zIndex: 10 + sp.z });
-      actor.style.setProperty("--c", m.color);
-      actor.innerHTML = `<span class="actor__shadow"></span>
-        <span class="actor__body anim-${sp.anim}" style="animation-delay:-${(Math.random() * 2).toFixed(2)}s">
-          <img src="${sp.src}" alt="" draggable="false">
-        </span>`;
-      // Match the button to the drawing's real proportions once it loads.
-      actor.querySelector("img").addEventListener("load", (e) => {
-        actor.style.aspectRatio = e.target.naturalWidth / e.target.naturalHeight;
-      });
-      actor.addEventListener("click", () => { cheer(m.id); openSheet(m.id); });
-      cam.appendChild(actor);
-
-      const tag = document.createElement("div");
-      tag.className = "tag";
-      tag.style.left = m.tag.x + "%";
-      tag.style.top = m.tag.y + "%";
-      tag.style.zIndex = 30;
-      tag.style.setProperty("--c", m.color);
-      tag.innerHTML = `<span class="tag__name">${m.name}</span><span class="tag__energy"><span data-energy="${m.id}"></span></span>`;
-      cam.appendChild(tag);
-    });
-  }
-
-  function cheer(id) {
-    const body = document.querySelector(`[data-member="${id}"] .actor__body`);
-    if (!body) return;
-    body.classList.remove("cheer"); void body.offsetWidth; body.classList.add("cheer");
-    setTimeout(() => body.classList.remove("cheer"), 700);
-  }
-  const cheerAll = () => state.members.forEach((m, i) => setTimeout(() => cheer(m.id), i * 90));
-
-  function render(changed = []) {
-    $("band-name").textContent = state.band.name;
-    $("act").textContent = `Act ${state.band.act} · ${state.band.actTitle}`;
-
-    RESOURCE_VIEW.forEach((r) => {
-      const chip = document.querySelector(`[data-chip="${r.key}"]`);
-      const from = shown[r.key], to = state.resources[r.key];
-      if (from !== to) {
-        tween(chip.querySelector("span"), from, to, r.fmt);
-        if (changed.includes(r.key) && r.key !== "day") FX.chipPop(chip, (to > from ? "+" : "") + (to - from));
-        chip.classList.remove("bump"); void chip.offsetWidth; chip.classList.add("bump");
-        shown[r.key] = to;
-      }
-    });
-
-    $("goal-label").textContent = state.goal.label;
-    $("goal-count").textContent = `${state.goal.progress} / ${state.goal.target}`;
-    $("goal-bar").style.width = (100 * state.goal.progress / state.goal.target) + "%";
-
-    state.members.forEach((m) => {
-      const el = document.querySelector(`[data-energy="${m.id}"]`);
-      if (el) el.style.width = m.energy + "%";
-    });
-    document.querySelectorAll(".actor").forEach((a) => a.classList.toggle("is-active", a.dataset.member === openMemberId));
-
-    const tired = state.members.some((m) => m.energy < DATA.costs.gigEnergy);
-    document.querySelector('[data-action="gig"]').disabled = tired;
-    if (openMemberId) renderSheet();
-    save();
-  }
-
-  function renderSheet() {
-    const m = member(openMemberId);
-    const sheet = $("sheet");
-    sheet.style.setProperty("--c", m.color);
-    $("sheet-name").textContent = m.name;
-    $("sheet-role").textContent = m.role;
-    $("sheet-bio").textContent = m.bio;
-    const rows = { ...m.stats, energy: m.energy, morale: m.morale };
-    const labels = { ...DATA.statLabels, energy: "Energy", morale: "Morale" };
-    $("sheet-stats").innerHTML = Object.keys(rows).map((k) => `
-      <dt>${labels[k]}</dt>
-      <dd><div class="bar"><div class="bar__fill" style="width:${rows[k]}%"></div></div><span class="num">${rows[k]}</span></dd>`).join("");
-    const train = $("sheet-train");
-    train.textContent = `Train · €${DATA.costs.trainCash}`;
-    train.disabled = state.resources.cash < DATA.costs.trainCash || m.energy < DATA.costs.trainEnergy;
-  }
-
-  function openSheet(id) {
-    openMemberId = id;
-    $("sheet").hidden = false;
-    render();
-    $("sheet-close").focus();
-  }
-  function closeSheet() {
-    openMemberId = null;
-    $("sheet").hidden = true;
-    render();
+    document.body.dataset.view = view;
+    VIEWS[view]($("#view"));
+    if (focus) $("#view").focus({ preventScroll: true });
+    window.scrollTo(0, 0);
   }
 
   let toastTimer;
   function toast(msg) {
-    const t = $("toast");
+    const t = $("#toast");
     t.textContent = msg;
     t.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
   }
 
-  // ---------- actions ----------
-  const actions = {
-    practice() {
-      if (state.members.some((m) => m.energy < DATA.costs.practiceEnergy)) return toast("Someone's exhausted. Let them rest.");
-      state.members.forEach((m) => {
-        m.stats.skill = clamp(m.stats.skill + 1 + Math.round(Math.random() * 2));
-        m.energy = clamp(m.energy - DATA.costs.practiceEnergy);
+  // ---------- views ----------
+  const VIEWS = {
+    hq(el) {
+      const venue = DATA.venues.pub;
+      const wins = Math.min(state.gigs.wins, DATA.goal.target);
+      const lowP = tired(DATA.costs.practice);
+      el.innerHTML = `
+        <section class="hq">
+          <div class="scene-card">
+            <div class="scene-host" id="hq-scene"></div>
+            <span class="badge badge-on-art">${DATA.scenes.garage.label}</span>
+          </div>
+          <div class="hq-panel">
+            <span class="badge">Act 1 · The Garage</span>
+            <h2 class="display">Small room.<br>Big plans.</h2>
+            <article class="card gig-card">
+              <h3>Your next gig</h3>
+              <p class="muted">${venue.name} · Day ${state.res.day}</p>
+              <div class="chips">
+                <span class="chip">${icon("mic")}${venue.tags[0]}</span>
+                <span class="chip">${icon("fans")}${venue.tags[1]}</span>
+              </div>
+              <div class="progress-row"><span>${DATA.goal.label}</span><span>${wins} / ${DATA.goal.target}</span></div>
+              <div class="meter"><i style="width:${100 * wins / DATA.goal.target}%"></i></div>
+              <button class="btn btn-primary" type="button" data-act="book">Book the pub ${icon("arrow")}</button>
+            </article>
+            <div class="action-row">
+              <button class="btn" type="button" data-act="practice" ${lowP.length ? "disabled" : ""}>${icon("guitar")}Practice</button>
+              <button class="btn" type="button" data-act="write">${icon("record")}Write a song</button>
+              <button class="btn" type="button" data-act="rest">${icon("moon")}Rest day</button>
+            </div>
+            <p class="small muted" id="hq-hint">${lowP.length ? `Too tired to practise: ${lowP.join(", ")}. Take a rest day.` : `Practice costs ${DATA.costs.practice} energy each and makes your songs tighter on stage.`}</p>
+          </div>
+        </section>`;
+      hqScene = window.AmpedScene.mount($("#hq-scene"), {
+        scene: DATA.scenes.garage, members: members(), ambience: true, drift: true, onTap: (m) => openMember(m.id)
       });
-      state.resources.day += 1;
-      FX.burst(state.members, () => "Skill up!");
-      cheerAll();
-      toast("Tight rehearsal. Everyone's skill went up.");
-      render(["day"]);
+      el.onclick = (e) => {
+        const b = e.target.closest("[data-act]");
+        if (!b || b.disabled) return;
+        ({ book: () => go("gigs", true), write: () => go("music", true), practice, rest: restDay })[b.dataset.act]();
+      };
     },
-    write() {
-      const quality = Math.round(avg("creativity") + Math.random() * 20);
-      state.songs.push({ quality, day: state.resources.day });
-      state.resources.hype = clamp(state.resources.hype + 5);
-      state.resources.day += 1;
-      FX.burst(state.members.filter((m) => m.id === "mika" || m.id === "nia"));
-      FX.floatText(50, 40, `New song · quality ${quality}`, "var(--amber)");
-      toast(`New song written. Quality ${quality}.`);
-      render(["hype", "day"]);
+
+    band(el) {
+      el.innerHTML = `
+        <section class="band">
+          <span class="badge">5 musicians</span>
+          <p class="muted">Different talents. Same impossible dream.</p>
+          <ul class="roster">
+            ${members().map((m) => `
+              <li>
+                <button class="card roster-card" type="button" data-member="${m.id}" style="--c:${m.color}">
+                  <img src="${m.sprite}" alt="">
+                  <span class="roster-text">
+                    <strong>${m.roleLabel}</strong>
+                    <span class="muted">${esc(m.name)} · ${m.line}</span>
+                    <span class="mini-meter" aria-label="Energy ${m.energy}%"><i style="width:${m.energy}%"></i></span>
+                  </span>
+                  ${icon("arrow")}
+                </button>
+              </li>`).join("")}
+          </ul>
+        </section>`;
+      el.onclick = (e) => { const b = e.target.closest("[data-member]"); if (b) openMember(b.dataset.member); };
     },
-    async gig() {
-      setBusy(true);
-      document.querySelector(".scene").classList.add("live");
-      cheerAll();
-      await FX.gig(state.members);
-      document.querySelector(".scene").classList.remove("live");
-      setBusy(false);
-      // Placeholder for the rhythm game: score comes from stats until it exists.
-      const score = avg("skill") * 0.6 + avg("presence") * 0.4 + state.resources.hype * 0.2 + Math.random() * 15;
-      const fans = Math.round(score / 2);
-      const cash = Math.round(40 + score * 2);
-      state.resources.fans += fans;
-      state.resources.cash += cash;
-      state.resources.hype = clamp(state.resources.hype + 3);
-      state.resources.day += 1;
-      state.members.forEach((m) => { m.energy = clamp(m.energy - DATA.costs.gigEnergy); });
-      state.goal.progress = Math.min(state.goal.target, state.goal.progress + 1);
-      if (state.resources.fans >= state.resources.fame * 150) state.resources.fame += 1;
-      render(["fans", "cash", "hype", "day", "fame"]);
-      showResult(score, fans, cash);
+
+    music(el) {
+      const W = DATA.songwriting;
+      const crt = Math.round(avg("creativity"));
+      const low = tired(DATA.costs.write);
+      el.innerHTML = `
+        <section class="music">
+          <span class="badge">New song</span>
+          <h2 class="display">What are we<br>trying to say?</h2>
+          <form class="stack" id="write-form" novalidate>
+            <label class="field"><span>Song title</span><input name="title" maxlength="40" autocomplete="off" required placeholder="Name your song"></label>
+            <fieldset class="field"><legend>Theme</legend><div class="chips">${W.themes.map((t, i) => `<label class="pick"><input type="radio" name="theme" value="${t}" ${i === 1 ? "checked" : ""}><span>${t}</span></label>`).join("")}</div></fieldset>
+            <fieldset class="field"><legend>Style</legend><div class="chips">${W.styles.map((s, i) => `<label class="pick"><input type="radio" name="style" value="${s}" ${i === 1 ? "checked" : ""}><span>${s}</span></label>`).join("")}</div></fieldset>
+            <div class="card">
+              <h3>The band brings</h3>
+              <p class="muted">Creativity ${crt}. Some combinations of theme and style work better than others. Try them and see.</p>
+            </div>
+            <div class="card">
+              <h3>Writing session</h3>
+              <div class="chips"><span class="chip">${icon("clock")}1 day</span><span class="chip">${icon("energy")}${DATA.costs.write} energy each</span></div>
+            </div>
+            <p class="small error" id="write-error" role="alert">${low.length ? `Too tired to write: ${low.join(", ")}.` : ""}</p>
+            <button class="btn btn-primary" type="submit" ${low.length ? "disabled" : ""}>Start writing ${icon("arrow")}</button>
+          </form>
+          <h3 class="section-title">Your songs</h3>
+          <ul class="song-list">
+            ${state.songs.map((s) => `
+              <li class="card song-row">
+                <span><strong>${esc(s.title)}</strong><span class="muted small">${s.theme} · ${s.style} · practised ${s.practice}/5</span></span>
+                <span class="song-q" aria-label="Quality ${s.quality}"><span class="mini-meter"><i style="width:${s.quality}%"></i></span><b>${s.quality}</b></span>
+              </li>`).join("")}
+          </ul>
+        </section>`;
+      $("#write-form").onsubmit = (e) => { e.preventDefault(); writeSong(new FormData(e.target)); };
+    },
+
+    gigs(el) {
+      const venue = DATA.venues.pub;
+      const n = state.next;
+      const low = tired(DATA.costs.gig);
+      el.innerHTML = `
+        <section class="gigs">
+          <article class="card venue-card">
+            <img class="venue-img" src="${DATA.scenes.pub.src}" alt="">
+            <div class="venue-body">
+              <span class="badge">Pub · Act 1</span>
+              <h2>${venue.name}</h2>
+              <div class="chips"><span class="chip">${icon("ticket")}€${venue.ticket} tickets</span><span class="chip">${icon("fans")}${venue.capacity} capacity</span></div>
+            </div>
+          </article>
+          <form class="stack" id="gig-form">
+            <fieldset class="field"><legend>Song</legend>
+              <div class="stack-sm">${state.songs.map((s) => `
+                <label class="pick pick-row"><input type="radio" name="song" value="${s.id}" ${s.id === n.song ? "checked" : ""}>
+                  <span><strong>${esc(s.title)}</strong><em class="muted small">Quality ${s.quality} · practised ${s.practice}/5</em></span></label>`).join("")}
+              </div>
+            </fieldset>
+            <fieldset class="field"><legend>Your part</legend>
+              <div class="chips">${members().map((m) => `<label class="pick"><input type="radio" name="role" value="${m.role}" ${m.role === n.role ? "checked" : ""}><span>${m.roleLabel}</span></label>`).join("")}</div>
+              <span class="small muted">Each part has its own chart.</span>
+            </fieldset>
+            <fieldset class="field"><legend>Difficulty</legend>
+              <div class="chips">${Object.entries(DATA.rhythm.difficulties).map(([k, d]) => `<label class="pick"><input type="radio" name="difficulty" value="${k}" ${k === n.difficulty ? "checked" : ""}><span>${d.label}</span></label>`).join("")}</div>
+              <span class="small muted">Harder charts pay more, and lose the crowd faster.</span>
+            </fieldset>
+            <div class="card">
+              <h3>Before you go on</h3>
+              <div class="chips"><span class="chip">${icon("energy")}${DATA.costs.gig} energy each</span><span class="chip">${icon("clock")}1 day</span><span class="chip">${icon("settings")}Timing ${state.settings.calibrated ? `${state.settings.offsetMs > 0 ? "+" : ""}${state.settings.offsetMs} ms` : "not calibrated"}</span></div>
+              <p class="small muted">Crowd starts at ${crowdStart(song(n.song))}% energy (practice raises this). Your player's skill makes timing a little more forgiving.</p>
+              <p class="small muted">Keys ${state.settings.keys.map((k) => k.toUpperCase()).join(" ")} or tap the lanes. Sound on.</p>
+            </div>
+            <p class="small error" role="alert">${low.length ? `Too tired to play: ${low.join(", ")}. Take a rest day first.` : ""}</p>
+            <button class="btn btn-primary" type="submit" ${low.length ? "disabled" : ""}>Play the gig ${icon("play")}</button>
+          </form>
+        </section>`;
+      $("#gig-form").onsubmit = (e) => {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        state.next = { song: f.get("song"), role: f.get("role"), difficulty: f.get("difficulty") };
+        save();
+        if (!state.settings.calibrated && !sessionSkipCalibration) openCalibration(true);
+        else startGig();
+      };
+    },
+
+    shop(el) {
+      el.innerHTML = `
+        <section class="shop">
+          <article class="card locked-card">
+            ${icon("lock")}
+            <h2>The gear shop is not open yet.</h2>
+            <p class="muted">Instruments, amps, studio kit, transport, stage effects, merch and crew arrive in a later milestone. Gear will change how gigs play, not just how they look.</p>
+          </article>
+        </section>`;
     }
   };
 
-  function setBusy(on) {
-    document.querySelectorAll("[data-action], .actor").forEach((b) => { b.disabled = on; });
+  // ---------- HQ actions ----------
+  function practice() {
+    const c = DATA.costs.practice;
+    if (tired(c).length) return toast("Someone's exhausted. Take a rest day.");
+    state.members.forEach((m) => { m.stats.skill = clamp(m.stats.skill + 1 + Math.floor(Math.random() * 3)); m.energy = clamp(m.energy - c); });
+    state.songs.forEach((s) => { s.practice = Math.min(5, s.practice + 1); });
+    state.res.day += 1;
+    commit();
+    hqScene && hqScene.burst("Skill up!");
+    toast("Tight rehearsal. Skill up, and every song is a bit tighter.");
+    setTimeout(() => view === "hq" && go("hq"), 1400);
+  }
+  function restDay() {
+    state.members.forEach((m) => { m.energy = clamp(m.energy + DATA.costs.restGain); m.morale = clamp(m.morale + 3); });
+    state.res.day += 1;
+    commit();
+    toast("A lazy day. Everyone feels better.");
+    go("hq");
+  }
+  function writeSong(f) {
+    const title = String(f.get("title") || "").trim();
+    const err = $("#write-error");
+    if (!title) { err.textContent = "Give your song a title."; $("[name=title]").focus(); return; }
+    if (state.songs.some((s) => s.title.toLowerCase() === title.toLowerCase())) { err.textContent = "You already have a song with that title."; return; }
+    const c = DATA.costs.write;
+    if (tired(c).length) { err.textContent = "The band is too tired to write."; return; }
+    const theme = f.get("theme"), style = f.get("style");
+    const combo = DATA.songwriting.combos[`${theme}|${style}`] || 0;
+    const quality = clamp(Math.round(avg("creativity") * 0.8 + combo + Math.random() * 12), 5, 100);
+    state.songs.push({ id: "s-" + Date.now().toString(36), title, theme, style, quality, practice: 0 });
+    state.members.forEach((m) => { m.energy = clamp(m.energy - c); m.stats.creativity = clamp(m.stats.creativity + 1); });
+    state.res.day += 1;
+    commit();
+    toast(combo ? `"${title}" written. Quality ${quality}. That combination clicked!` : `"${title}" written. Quality ${quality}.`);
+    go("music");
   }
 
-  const STAR = '<svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>';
-  function showResult(score, fans, cash) {
-    const stars = Math.max(1, Math.min(5, Math.round(score / 12)));
-    const titles = ["Rough night", "Not bad", "Solid set", "The crowd loved it!", "Legendary!"];
-    $("result-title").textContent = titles[stars - 1];
-    $("result-stars").innerHTML = Array.from({ length: 5 }, (_, i) =>
-      STAR.replace("<svg", `<svg class="${i < stars ? "on" : ""}" style="animation-delay:${i * 0.12}s"`)).join("");
-    $("result-grid").innerHTML = `
-      <div><dt>Fans</dt><dd style="color:var(--teal)">+${fans}</dd></div>
-      <div><dt>Cash</dt><dd style="color:var(--amber)">+€${cash}</dd></div>
-      <div><dt>Score</dt><dd>${Math.round(score)}</dd></div>`;
-    $("result").showModal();
-  }
-  $("result-close").addEventListener("click", () => $("result").close());
-
-  document.querySelectorAll("[data-action]").forEach((b) =>
-    b.addEventListener("click", () => actions[b.dataset.action]()));
-
-  $("sheet-close").addEventListener("click", closeSheet);
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openMemberId) closeSheet(); });
-
-  $("sheet-train").addEventListener("click", () => {
-    const m = member(openMemberId);
-    state.resources.cash -= DATA.costs.trainCash;
-    m.stats.skill = clamp(m.stats.skill + 4);
-    m.energy = clamp(m.energy - DATA.costs.trainEnergy);
-    FX.burst([m], () => "Skill +4");
-    cheer(m.id);
-    toast(`${m.name} took a lesson. Skill +4.`);
-    render(["cash"]);
-  });
-  $("sheet-rest").addEventListener("click", () => {
-    const m = member(openMemberId);
-    m.energy = clamp(m.energy + 30);
-    m.morale = clamp(m.morale + 5);
-    FX.floatText(m.tag.x, m.tag.y, "Energy +30", m.color);
-    toast(`${m.name} is recharged.`);
+  // ---------- member sheet ----------
+  function openMember(id) {
+    const dlg = $("#member-sheet");
+    const render = () => {
+      const m = member(id);
+      const rows = { ...m.stats, energy: m.energy, morale: m.morale };
+      const labels = { ...DATA.statLabels, energy: "Energy", morale: "Morale" };
+      const canTrain = state.res.cash >= DATA.costs.train && m.energy >= DATA.costs.trainEnergy;
+      dlg.style.setProperty("--c", m.color);
+      dlg.innerHTML = `
+        <div class="sheet-head">
+          <img class="sheet-thumb" src="${m.sprite}" alt="">
+          <div><h2 id="member-name">${esc(m.name)}</h2><span class="eyebrow">${m.roleLabel}</span></div>
+          <button class="icon-btn" type="button" data-close aria-label="Close">${icon("close")}</button>
+        </div>
+        <p class="muted">${m.bio}</p>
+        <dl class="stats">${Object.keys(rows).map((k) => `<dt>${labels[k]}</dt><dd><span class="mini-meter"><i style="width:${rows[k]}%"></i></span><b>${rows[k]}</b></dd>`).join("")}</dl>
+        <div class="action-row two">
+          <button class="btn" type="button" data-m="train" ${canTrain ? "" : "disabled"}>${icon("guitar")}Lesson · €${DATA.costs.train}</button>
+          <button class="btn" type="button" data-m="rest" ${m.energy >= 100 ? "disabled" : ""}>${icon("moon")}Nap</button>
+        </div>
+        <p class="small muted">${canTrain ? `A lesson gives +4 skill and costs ${DATA.costs.trainEnergy} energy.` : state.res.cash < DATA.costs.train ? "Not enough cash for a lesson." : "Too tired for a lesson."}</p>`;
+    };
     render();
-  });
+    dlg.onclick = (e) => {
+      if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
+      const b = e.target.closest("[data-m]");
+      if (!b || b.disabled) return;
+      const m = raw(id);
+      if (b.dataset.m === "train") {
+        state.res.cash -= DATA.costs.train;
+        m.stats.skill = clamp(m.stats.skill + 4);
+        m.energy = clamp(m.energy - DATA.costs.trainEnergy);
+        toast(`${def(id).name} took a lesson. Skill +4.`);
+      } else {
+        m.energy = clamp(m.energy + 30);
+        toast(`${def(id).name} had a nap. Energy +30.`);
+      }
+      commit();
+      render();
+    };
+    dlg.onclose = () => { if (view === "hq" || view === "band") go(view); };
+    dlg.showModal();
+  }
 
-  buildChips();
-  renderScene();
-  render();
-  FX.startIdle(() => state.members);
+  // ---------- gig ----------
+  // Practised songs start with a warmer crowd.
+  const crowdStart = (s) => Math.min(90, DATA.rhythm.crowd.start + s.practice * 4);
+  let sessionSkipCalibration = false;
+  async function startGig() {
+    await A.unlock();
+    applySettings();
+    const n = state.next;
+    const s = song(n.song);
+    const m = members().find((x) => x.role === n.role);
+    const gigId = "g-" + Date.now().toString(36);
+    if (hqScene) { hqScene.stop(); hqScene = null; }
+    $("#app").hidden = true;
+    const layer = $("#stage-layer");
+    layer.hidden = false;
+    document.body.classList.add("on-stage");
+    window.AmpedRhythm.start(layer, {
+      song: s, role: n.role, roleLabel: m.roleLabel, difficulty: n.difficulty,
+      skill: m.stats.skill, crowdStart: crowdStart(s),
+      settings: state.settings, scene: DATA.scenes.pub, members: members(),
+      onFinish: (r) => showResults(applyGig(gigId, s, n, r), r, s),
+      onQuit: () => { leaveStage(); toast("You left the stage. No pay, no energy spent."); go("gigs"); }
+    });
+  }
+  function leaveStage() {
+    const layer = $("#stage-layer");
+    layer.hidden = true; layer.innerHTML = "";
+    document.body.classList.remove("on-stage");
+    $("#app").hidden = false;
+  }
+
+  // Applies rewards once per gig id, so a double click or reload can't pay twice.
+  function applyGig(gigId, s, n, r) {
+    if (state.gigs.lastId === gigId) return null;
+    const venue = DATA.venues.pub;
+    const diffMult = { easy: 1, normal: 1.3, hard: 1.6 }[n.difficulty];
+    const stars = r.failed ? 0 : r.accuracy >= 0.95 ? 5 : r.accuracy >= 0.85 ? 4 : r.accuracy >= 0.7 ? 3 : r.accuracy >= 0.5 ? 2 : 1;
+    const turnout = Math.round(venue.capacity * Math.min(1, 0.35 + state.res.fans / 150 + state.res.hype / 200));
+    const before = { ...state.res };
+    const reward = {
+      stars, turnout,
+      cash: r.failed ? 0 : Math.round(turnout * venue.ticket * (0.5 + 0.5 * r.accuracy) * diffMult * 0.5),
+      fans: r.failed ? -Math.min(3, state.res.fans) : Math.round((4 + 20 * r.accuracy * r.accuracy) * diffMult * (1 + s.quality / 100)),
+      hype: r.failed ? -8 : stars * 2
+    };
+    state.res.cash += reward.cash;
+    state.res.fans += reward.fans;
+    state.res.hype = clamp(state.res.hype + reward.hype);
+    while (state.res.fans >= state.res.fame * 100) state.res.fame += 1;
+    reward.fameUp = state.res.fame - before.fame;
+    state.res.day += 1;
+    state.members.forEach((m) => {
+      m.energy = clamp(m.energy - DATA.costs.gig);
+      m.morale = clamp(m.morale + (r.failed ? -8 : stars >= 4 ? 5 : 0));
+    });
+    state.gigs.played += 1;
+    if (!r.failed) state.gigs.wins += 1;
+    state.gigs.best = Math.max(state.gigs.best, r.score);
+    state.gigs.lastId = gigId;
+    save();
+    return reward;
+  }
+
+  function showResults(reward, r, s) {
+    const layer = $("#stage-layer");
+    const venue = DATA.venues.pub;
+    const stars = reward ? reward.stars : 0;
+    const title = r.failed ? "Booed off." : ["", "Rough night.", "Not bad.", "Solid set.", "They loved it!", "Legendary!"][stars];
+    const review = r.failed ? DATA.reviews.fail : DATA.reviews[stars];
+    const wins = Math.min(state.gigs.wins, DATA.goal.target);
+    const lowAgain = tired(DATA.costs.gig);
+    const STAR = (on, i) => `<svg class="star ${on ? "on" : ""}" style="animation-delay:${i * 0.12}s" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>`;
+    layer.innerHTML = `
+      <section class="results" aria-labelledby="results-title">
+        <img class="results-bg" src="${DATA.scenes.pub.src}" alt="">
+        <div class="panel results-panel">
+          <span class="eyebrow">Gig result · ${venue.name}</span>
+          <h2 id="results-title">${title}</h2>
+          <div class="stars" role="img" aria-label="${stars} of 5 stars">${[0, 1, 2, 3, 4].map((i) => STAR(i < stars, i)).join("")}</div>
+          <p class="review">${review}</p>
+          <dl class="result-grid">
+            <div><dt>Accuracy</dt><dd>${Math.round(r.accuracy * 100)}%</dd></div>
+            <div><dt>Best streak</dt><dd>${r.maxStreak}</dd></div>
+            <div><dt>Score</dt><dd>${r.score.toLocaleString()}</dd></div>
+          </dl>
+          <p class="small muted counts">Perfect ${r.counts.perfect} · Great ${r.counts.great} · Good ${r.counts.good} · Miss ${r.counts.miss} · ${esc(s.title)}</p>
+          ${reward ? `
+          <ul class="rewards">
+            <li>${icon("cash")}<span>Cash</span><b class="${reward.cash ? "up" : ""}">+€${reward.cash}</b></li>
+            <li>${icon("fans")}<span>Fans</span><b class="${reward.fans >= 0 ? "up" : "down"}">${reward.fans >= 0 ? "+" : ""}${reward.fans}</b></li>
+            <li>${icon("hype")}<span>Hype</span><b class="${reward.hype >= 0 ? "up" : "down"}">${reward.hype >= 0 ? "+" : ""}${reward.hype}</b></li>
+            ${reward.fameUp ? `<li>${icon("fame")}<span>Fame</span><b class="up">Level ${state.res.fame}!</b></li>` : ""}
+          </ul>
+          <p class="small muted">${reward.turnout} people came. Everyone used ${DATA.costs.gig} energy.</p>` : ""}
+          <div class="progress-row"><span>${DATA.goal.label}</span><span>${wins} / ${DATA.goal.target}</span></div>
+          <div class="meter"><i style="width:${100 * wins / DATA.goal.target}%"></i></div>
+          <div class="action-row two">
+            <button class="btn btn-primary" type="button" data-r="hq">Back to HQ ${icon("hq")}</button>
+            <button class="btn" type="button" data-r="again" ${lowAgain.length ? "disabled" : ""}>Play again</button>
+          </div>
+          ${lowAgain.length ? `<p class="small muted">Too tired for another gig: ${lowAgain.join(", ")}.</p>` : ""}
+        </div>
+      </section>`;
+    $("[data-r=hq]", layer).focus();
+    layer.onclick = (e) => {
+      const b = e.target.closest("[data-r]");
+      if (!b || b.disabled) return;
+      layer.onclick = null;
+      leaveStage();
+      buildResources();
+      if (b.dataset.r === "again") startGig(); else go("hq", true);
+    };
+  }
+
+  // ---------- settings ----------
+  function openSettings() {
+    const dlg = $("#settings-sheet");
+    const S = state.settings;
+    let capturing = -1;
+    const render = () => {
+      dlg.innerHTML = `
+        <div class="sheet-head"><h2 id="settings-title">Settings</h2><button class="icon-btn" type="button" data-close aria-label="Close">${icon("close")}</button></div>
+        <div class="stack">
+          <label class="field"><span>Music volume <b>${Math.round(S.music * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value="${S.music}" data-s="music"></label>
+          <label class="field"><span>Sound effects <b>${Math.round(S.sfx * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value="${S.sfx}" data-s="sfx"></label>
+          <label class="field"><span>Timing offset <b>${S.offsetMs > 0 ? "+" : ""}${S.offsetMs} ms</b></span><input type="range" min="-200" max="200" step="5" value="${S.offsetMs}" data-s="offsetMs">
+            <span class="small muted">Positive if you tend to hit late. Calibrate to set it for you.</span></label>
+          <button class="btn" type="button" data-calibrate>${icon("clock")}Calibrate timing</button>
+          <fieldset class="field"><legend>Lane keys</legend>
+            <div class="chips">${S.keys.map((k, i) => `<button class="key-btn" type="button" data-key="${i}" aria-label="Lane ${i + 1} key, currently ${k.toUpperCase()}. Press to change">${capturing === i ? "Press a key…" : k.toUpperCase()}</button>`).join("")}</div>
+          </fieldset>
+          <label class="field"><span>Motion</span>
+            <select data-s="motion">
+              <option value="system" ${S.motion === "system" ? "selected" : ""}>Follow my device</option>
+              <option value="reduce" ${S.motion === "reduce" ? "selected" : ""}>Reduce motion</option>
+              <option value="full" ${S.motion === "full" ? "selected" : ""}>Full motion</option>
+            </select></label>
+          <button class="btn btn-danger" type="button" data-reset>Reset progress</button>
+        </div>`;
+    };
+    render();
+    dlg.oninput = (e) => {
+      const k = e.target.dataset.s;
+      if (!k) return;
+      S[k] = k === "motion" ? e.target.value : Number(e.target.value);
+      if (k === "offsetMs") S.calibrated = true;
+      applySettings(); save();
+      const b = e.target.closest("label").querySelector("b");
+      if (b) b.textContent = k === "offsetMs" ? `${S.offsetMs > 0 ? "+" : ""}${S.offsetMs} ms` : `${Math.round(S[k] * 100)}%`;
+    };
+    dlg.onchange = dlg.oninput;
+    dlg.onkeydown = (e) => {
+      if (capturing < 0) return;
+      e.preventDefault();
+      const k = e.key.toLowerCase();
+      if (k === "escape") { capturing = -1; return render(); }
+      if (!/^[a-z0-9;,.\/]$/.test(k)) return toast("Use a letter, number or ; , . /");
+      if (S.keys.includes(k) && S.keys[capturing] !== k) return toast(`${k.toUpperCase()} is already used by another lane.`);
+      S.keys[capturing] = k; capturing = -1; save(); render();
+    };
+    dlg.onclick = (e) => {
+      if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
+      const kb = e.target.closest("[data-key]");
+      if (kb) { capturing = Number(kb.dataset.key); render(); $(`[data-key="${capturing}"]`, dlg).focus(); return; }
+      if (e.target.closest("[data-calibrate]")) { dlg.close(); openCalibration(false); return; }
+      if (e.target.closest("[data-reset]")) {
+        confirmAction("Reset all progress?", "Your band, songs, cash and fans go back to day 1. This cannot be undone.", "Reset", () => {
+          const keep = state.settings;
+          state = fresh(); state.settings = keep; save(); buildResources(); dlg.close(); go("hq"); toast("Progress reset.");
+        });
+      }
+    };
+    dlg.onclose = () => { if (view === "gigs") go("gigs"); };
+    dlg.showModal();
+  }
+
+  function confirmAction(title, body, label, onYes) {
+    const dlg = $("#confirm-sheet");
+    dlg.innerHTML = `
+      <h2 id="confirm-title">${title}</h2>
+      <p class="muted">${body}</p>
+      <div class="action-row two">
+        <button class="btn" type="button" data-c="no">Cancel</button>
+        <button class="btn btn-danger" type="button" data-c="yes">${label}</button>
+      </div>`;
+    dlg.onclick = (e) => {
+      const b = e.target.closest("[data-c]");
+      if (e.target === dlg || (b && b.dataset.c === "no")) return dlg.close();
+      if (b && b.dataset.c === "yes") { dlg.close(); onYes(); }
+    };
+    dlg.showModal();
+    $("[data-c=no]", dlg).focus();
+  }
+
+  // ---------- calibration ----------
+  // Plays clicks on the audio clock and measures how early/late the player taps.
+  function openCalibration(beforeGig) {
+    const dlg = $("#calibrate-sheet");
+    const BPM = 100, CLICKS = 12, WARMUP = 3;
+    let clicks = [], taps = [], running = false, result = null;
+    const render = () => {
+      dlg.innerHTML = `
+        <div class="sheet-head"><h2 id="calibrate-title">Timing check</h2><button class="icon-btn" type="button" data-close aria-label="Close">${icon("close")}</button></div>
+        <p class="muted">Tap along to ${CLICKS} clicks. We measure how early or late you tap, so notes line up with what you hear on this device.</p>
+        ${running ? `<button class="btn btn-primary tap-pad" type="button" data-tap>Tap on every click</button><p class="small muted">Or press Space.</p>`
+          : result ? `<div class="card"><h3>${result.text}</h3><p class="muted small">${result.detail}</p></div>
+            <div class="action-row two"><button class="btn" type="button" data-start>Try again</button><button class="btn btn-primary" type="button" data-save ${result.ok ? "" : "disabled"}>Use this</button></div>`
+          : `<button class="btn btn-primary" type="button" data-start>${icon("play")}Start (sound on)</button>`}
+        ${beforeGig && !running ? `<button class="btn btn-ghost" type="button" data-skip>Skip for now and play</button>` : ""}`;
+    };
+    async function begin() {
+      await A.unlock(); applySettings();
+      const spb = 60 / BPM, t0 = A.now() + 0.6;
+      clicks = Array.from({ length: CLICKS }, (_, i) => t0 + i * spb);
+      clicks.forEach((t, i) => A.click(t, i % 4 === 0));
+      taps = []; running = true; result = null; render();
+      $("[data-tap]", dlg).focus();
+      setTimeout(finish, (CLICKS * spb + 1) * 1000);
+    }
+    function tap() { if (running) taps.push(A.now()); }
+    function finish() {
+      running = false;
+      const spb = 60 / BPM;
+      const diffs = taps.map((t) => {
+        const nearest = clicks.reduce((a, c) => (Math.abs(c - t) < Math.abs(a - t) ? c : a), clicks[0]);
+        return { d: t - nearest, i: clicks.indexOf(nearest) };
+      }).filter((x) => x.i >= WARMUP && Math.abs(x.d) < spb * 0.45).map((x) => x.d).sort((a, b) => a - b);
+      if (diffs.length < 4) {
+        result = { ok: false, text: "Not enough taps.", detail: "Tap on each click you hear, then try again." };
+      } else {
+        const median = diffs[Math.floor(diffs.length / 2)];
+        const ms = Math.round(median * 1000 / 5) * 5;
+        result = { ok: true, ms, text: ms === 0 ? "Right on time." : `You tap ${Math.abs(ms)} ms ${ms > 0 ? "late" : "early"}.`, detail: `Offset will be ${ms > 0 ? "+" : ""}${ms} ms, measured from ${diffs.length} taps.` };
+      }
+      if (dlg.open) render();
+    }
+    render();
+    dlg.onkeydown = (e) => { if (running && (e.code === "Space" || state.settings.keys.includes(e.key.toLowerCase()))) { e.preventDefault(); if (!e.repeat) tap(); } };
+    dlg.onpointerdown = (e) => { if (e.target.closest("[data-tap]")) { e.preventDefault(); tap(); } };
+    dlg.onclick = (e) => {
+      if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
+      if (e.target.closest("[data-start]")) begin();
+      if (e.target.closest("[data-save]")) {
+        state.settings.offsetMs = result.ms; state.settings.calibrated = true; save(); dlg.close();
+        toast(`Timing set to ${result.ms > 0 ? "+" : ""}${result.ms} ms.`);
+        if (beforeGig) startGig();
+      }
+      if (e.target.closest("[data-skip]")) { sessionSkipCalibration = true; dlg.close(); startGig(); }
+    };
+    dlg.onclose = () => { running = false; if (view === "gigs" && !beforeGig) go("gigs"); };
+    dlg.showModal();
+  }
+
+  // ---------- title & boot ----------
+  function enterGame() {
+    $("#title").hidden = true;
+    $("#app").hidden = false;
+    buildResources();
+    go("hq", true);
+  }
+  function boot() {
+    applySettings();
+    matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", applySettings);
+    const hasSave = !!load();
+    const cont = $("#title-continue");
+    cont.disabled = !hasSave;
+    cont.textContent = hasSave ? `Continue · Day ${state.res.day}` : "Continue";
+    cont.onclick = enterGame;
+    $("#title-new").onclick = () => {
+      const start = () => { const keep = state.settings; state = fresh(); state.settings = keep; save(); enterGame(); };
+      hasSave ? confirmAction("Start a new game?", "Your saved band will be replaced.", "Start over", start) : start();
+    };
+    (hasSave ? cont : $("#title-new")).focus();
+    document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => go(b.dataset.tab, true)));
+    $("#open-settings").onclick = openSettings;
+  }
+  boot();
 })();

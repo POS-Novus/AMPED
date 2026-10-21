@@ -1,0 +1,2 @@
+:root{--ink:#111424;--surface:#1D2035;--raised:#292C45;--line:#464A66;--muted:#B9BDD1;--cream:#FFF4D6;--yellow:#FFE45E;--cyan:#46D9E8;--pink:#FF648E;--violet:#A792FF;--green:#75E3B0;--red:#FF8585;--radius:16px;--touch:48px;--space:8px;}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
