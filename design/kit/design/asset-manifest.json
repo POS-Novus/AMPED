@@ -1,0 +1,1076 @@
+{
+  "version": "1.0",
+  "date": "2026-10-21",
+  "root": "AMPED_Design_Kit_v1",
+  "counts": {
+    "pngMasters": 21,
+    "svgAssets": 101
+  },
+  "notes": [
+    "No animation frames, skeletal rigs, audio, music charts or game logic are included.",
+    "Concept sheets must not be loaded as uniform animation spritesheets.",
+    "Runtime resized/compressed copies should be derived separately; originals are immutable source masters."
+  ],
+  "assets": [
+    {
+      "id": "keyart-garage",
+      "path": "assets/marketing/keyart-garage.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "marketing_illustration",
+      "notes": "Promotional key art. Contains characters and detailed scenery; do not use as a substitute for an interactive HQ scene.",
+      "sha256": "336a3a5e8164124feb70615851e151ca2870889c03f9bf022f254718429522b5"
+    },
+    {
+      "id": "band-guitar",
+      "path": "assets/characters/band-guitar.png",
+      "format": "png",
+      "width": 1145,
+      "height": 1374,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "static_character_alpha",
+      "notes": "Static full-body cutout, not rigged or animated. Some cutouts have soft coloured edge haze; review on light and dark backgrounds before shipping.",
+      "sha256": "7dc9c3a16f481e401cec2666fad0a2c65a2c4a24859abbfae98b6f0a080a6229"
+    },
+    {
+      "id": "band-vocals",
+      "path": "assets/characters/band-vocals.png",
+      "format": "png",
+      "width": 1024,
+      "height": 1536,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "static_character_alpha",
+      "notes": "Static full-body cutout, not rigged or animated. Some cutouts have soft coloured edge haze; review on light and dark backgrounds before shipping.",
+      "sha256": "246da4a5b6edb03b26616a62c21317ef4a1e4925788cfaa409a639edaaae35c5"
+    },
+    {
+      "id": "band-bass",
+      "path": "assets/characters/band-bass.png",
+      "format": "png",
+      "width": 1024,
+      "height": 1536,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "static_character_alpha",
+      "notes": "Static full-body cutout, not rigged or animated. Some cutouts have soft coloured edge haze; review on light and dark backgrounds before shipping.",
+      "sha256": "c01d88bc2a121cdf378d2a6d1d98f47e87c0e9cd44861732d039d380e6aea200"
+    },
+    {
+      "id": "band-drums",
+      "path": "assets/characters/band-drums.png",
+      "format": "png",
+      "width": 1024,
+      "height": 1536,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "static_character_alpha",
+      "notes": "Static full-body cutout, not rigged or animated. Some cutouts have soft coloured edge haze; review on light and dark backgrounds before shipping.",
+      "sha256": "99092d9e1adf63035125bf71e38d0c1e638d2ce7a333d0f0ebdceca7cc5cf68d"
+    },
+    {
+      "id": "band-keys",
+      "path": "assets/characters/band-keys.png",
+      "format": "png",
+      "width": 1024,
+      "height": 1536,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "static_character_alpha",
+      "notes": "Static full-body cutout, not rigged or animated. Some cutouts have soft coloured edge haze; review on light and dark backgrounds before shipping.",
+      "sha256": "cc4197e66cf324c4ff44848737d9859745f059ba6881801c1b065115a7730a0f"
+    },
+    {
+      "id": "hq-evolution",
+      "path": "assets/world/hq-evolution.png",
+      "format": "png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "a69ec2e090db8335f2513946ee4e00d51e7bbee5d5d9aca2b458a2a6ad3ae180"
+    },
+    {
+      "id": "venue-evolution",
+      "path": "assets/world/venue-evolution.png",
+      "format": "png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "1819684271945b9ec7590ba5fbb2d85442761a3faca91099bc12fafda2904e1c"
+    },
+    {
+      "id": "festival-evolution",
+      "path": "assets/world/festival-evolution.png",
+      "format": "png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "d22c1b90517d8406a2af8f503978901e701d5a9b6476771f6c0ee4fdd76ef2a2"
+    },
+    {
+      "id": "story-cast",
+      "path": "assets/characters/story-cast.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "d814083d3a2ceab87062e56b1225c128bfdaad259a0c12b07cc0867fa3b3dc69"
+    },
+    {
+      "id": "genre-wardrobe",
+      "path": "assets/characters/genre-wardrobe.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "293c29a2680b9039ea73f97e16869a62f8bd29ae011f6ec9081481c351651220"
+    },
+    {
+      "id": "hq-garage-backdrop",
+      "path": "assets/world/hq-garage-backdrop.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "flat_background",
+      "notes": "One flattened image. Furniture, scenery and lights are baked together. No parallax layers, prop sprites or collision geometry.",
+      "sha256": "c394d912054765ae5e45eaccf7e3a5e575ac9b268e1c5d75aae0100b009ca052"
+    },
+    {
+      "id": "venue-pub-backdrop",
+      "path": "assets/world/venue-pub-backdrop.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "flat_background",
+      "notes": "One flattened image. Furniture, scenery and lights are baked together. No parallax layers, prop sprites or collision geometry.",
+      "sha256": "908daad137aa2f81b090884e787007f99a02f22e3b384bb7eba00d976bfe9eca"
+    },
+    {
+      "id": "festival-solstice-backdrop",
+      "path": "assets/world/festival-solstice-backdrop.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "flat_background",
+      "notes": "One flattened image. Furniture, scenery and lights are baked together. No parallax layers, prop sprites or collision geometry.",
+      "sha256": "a4fe2f7db0721e25ec73e2fe165e7e8eabc7582c1cce9013351f592c40f75e62"
+    },
+    {
+      "id": "crowd-strips",
+      "path": "assets/characters/crowd-strips.png",
+      "format": "png",
+      "width": 1774,
+      "height": 887,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "23d8424adc17b126b010765f462697b28a15a89cf0a2ae6a3a6e8c9df55266e4"
+    },
+    {
+      "id": "festival-facilities",
+      "path": "assets/world/festival-facilities.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGBA",
+      "hasTransparency": true,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "85f944cae78c41768c7ee03be214b4e52b64310e993ea5f2543ad55e536b5fd8"
+    },
+    {
+      "id": "tribe-headbangers",
+      "path": "assets/characters/tribes/tribe-headbangers.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "cb859d6263051fdce1e57c3b67239bac881f87f77351d1dcfffa31b01cd39d4e"
+    },
+    {
+      "id": "tribe-punks",
+      "path": "assets/characters/tribes/tribe-punks.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "0b4c925c5e2b9fb5addaf23b73b8c7fcefe6f7c48ffbfc407c5fedd2428f83f7"
+    },
+    {
+      "id": "tribe-hippies",
+      "path": "assets/characters/tribes/tribe-hippies.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "b5214b69142153e5d4ec55f247405b3b1259020663fe80192c572c50711949af"
+    },
+    {
+      "id": "tribe-kpop",
+      "path": "assets/characters/tribes/tribe-kpop.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "6183e1156e7272f66b7b03e1b254396f62dd98a995b258b4ea9028505a38a8de"
+    },
+    {
+      "id": "tribe-trappers",
+      "path": "assets/characters/tribes/tribe-trappers.png",
+      "format": "png",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "hasTransparency": false,
+      "status": "concept_sheet_needs_preparation",
+      "notes": "Multi-panel illustration; not a certified engine atlas. Panel positions and margins must be measured from actual pixels. No extraction rectangles supplied.",
+      "sha256": "8bc33054e2b362a5e5c18b13b75a7975191da41ae22ede1f4a08c18e43ae5c51"
+    },
+    {
+      "id": "brand-amped-app-icon",
+      "path": "assets/brand/amped-app-icon.svg",
+      "format": "svg",
+      "viewBox": "0 0 256 256",
+      "status": "editable_vector",
+      "sha256": "3655c083b88b5a204c459806976eba4ec1dc41491229a85c88038e58479e9f42"
+    },
+    {
+      "id": "brand-amped-mark",
+      "path": "assets/brand/amped-mark.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "e4ce014a13d638222d524745be6328d2145dda02ea9257af0bb5e6b543fed16f"
+    },
+    {
+      "id": "brand-amped-wordmark-cream",
+      "path": "assets/brand/amped-wordmark-cream.svg",
+      "format": "svg",
+      "viewBox": "0 0 512 144",
+      "status": "editable_vector",
+      "sha256": "9f09b51f0c063dbf8aa6621555521f1a3a3eb15640f5f735a3dfe5360c3ff854"
+    },
+    {
+      "id": "brand-amped-wordmark-ink",
+      "path": "assets/brand/amped-wordmark-ink.svg",
+      "format": "svg",
+      "viewBox": "0 0 512 144",
+      "status": "editable_vector",
+      "sha256": "01f8fa7da39277fd887e58893cc88643c5cad4c9fc7872a78100541f7f7bfd7d"
+    },
+    {
+      "id": "brand-amped-wordmark-primary",
+      "path": "assets/brand/amped-wordmark-primary.svg",
+      "format": "svg",
+      "viewBox": "0 0 512 144",
+      "status": "editable_vector",
+      "sha256": "97a28779f18237dcb2f844911737f706343f54c39a54432d9922266e41d06d5f"
+    },
+    {
+      "id": "facilities-bar",
+      "path": "assets/facilities/bar.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "2ab9b19dc136580325b079bb09069894ef1a004aa03fb29989ce97537a21bd55"
+    },
+    {
+      "id": "facilities-camp",
+      "path": "assets/facilities/camp.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "7035875d36faddc830dfe209e7d04e85c7952139178bc3a52423ab726573f7ec"
+    },
+    {
+      "id": "facilities-food",
+      "path": "assets/facilities/food.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "a863015a91cc16b542fa10b1983cc5f97a0aa596469e8997e924c1f54911bb7d"
+    },
+    {
+      "id": "facilities-medical",
+      "path": "assets/facilities/medical.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "337940e2d5882f2d6ff70f0eb96423ebfc482bda2d771fcff7c4c8fccb5c56d6"
+    },
+    {
+      "id": "facilities-merch",
+      "path": "assets/facilities/merch.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "45a1be779a6a21c4ff56d8af08623ed137a0428dc1f1ebc17ddb488cd892a9bd"
+    },
+    {
+      "id": "facilities-stage",
+      "path": "assets/facilities/stage.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "edd0f3763fade099e52e160028aeee4365f2b0dff7955e1d8757a5cd637ad09a"
+    },
+    {
+      "id": "facilities-toilets",
+      "path": "assets/facilities/toilets.svg",
+      "format": "svg",
+      "viewBox": "0 0 128 128",
+      "status": "editable_vector",
+      "sha256": "49137727d0a67670c91bd64dbb729b551215118ac6b4910a95f2d534cafd526b"
+    },
+    {
+      "id": "gear-amps-t1",
+      "path": "assets/gear/amps-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "3c321c85506b1301ed61124306cefee337ba760fcaa1e73a4e4af152a8d3ab1b"
+    },
+    {
+      "id": "gear-amps-t2",
+      "path": "assets/gear/amps-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "5876933d36331ded7416bfb28d99cc5654bba60390a195ab02248c5dcb83ee1b"
+    },
+    {
+      "id": "gear-amps-t3",
+      "path": "assets/gear/amps-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "6c7ccf2f9fd091d4ec4c5b22ee8933de1a6dafbf4941fc3a5ad01ee30b97e0ee"
+    },
+    {
+      "id": "gear-amps-t4",
+      "path": "assets/gear/amps-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "b427d48ac0bac79cf4534d9e08420db852f556acd2615999fffecb43bf04c343"
+    },
+    {
+      "id": "gear-amps-t5",
+      "path": "assets/gear/amps-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "4d7a00132c8237bdbd7f87dbb7581901fc55be527a8d8c6999143c4c2fa3f7bc"
+    },
+    {
+      "id": "gear-crew-t1",
+      "path": "assets/gear/crew-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "cdd80e9816e037c0cadf5e625b647e232a4affc5e78266872316fa1c0b0089f8"
+    },
+    {
+      "id": "gear-crew-t2",
+      "path": "assets/gear/crew-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "bd07683a100e31ecb5de98eaf1be656a5cf4e6541e3428689e1e3716b44e9cea"
+    },
+    {
+      "id": "gear-crew-t3",
+      "path": "assets/gear/crew-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "cb3056270cae9985a7091557fe706f221b77c8233c3c1f77e06c4da6e7c1e8f2"
+    },
+    {
+      "id": "gear-crew-t4",
+      "path": "assets/gear/crew-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "68bfee77170d90d90248be5da89349ac68ece7b72a386c78ddbbf1b9a5f0dc06"
+    },
+    {
+      "id": "gear-crew-t5",
+      "path": "assets/gear/crew-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "0dbf8699e02c7013a3a1c2a8c460265c58790ec641a90dfb023018a3db9996db"
+    },
+    {
+      "id": "gear-fx-t1",
+      "path": "assets/gear/fx-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "fcdddcef5fa5e90b6a9b4c6efb10c391bc5f768ee7103e62f0798804366f8337"
+    },
+    {
+      "id": "gear-fx-t2",
+      "path": "assets/gear/fx-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "061c64ce83cb62f432da213528d9103f5841fac106f63a3ff70e1ef0ae48808c"
+    },
+    {
+      "id": "gear-fx-t3",
+      "path": "assets/gear/fx-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "921dca839d81525db371d9a10d91f784b7688a458bbcafc2df4c5a820881e8d7"
+    },
+    {
+      "id": "gear-fx-t4",
+      "path": "assets/gear/fx-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "34d76691650a5d4b0800b0448c8846daaad283cbde06eedab708bc37b126a819"
+    },
+    {
+      "id": "gear-fx-t5",
+      "path": "assets/gear/fx-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "cd1f6f497b129dc2284f16ab0182d86b8e4b010db4fff1912da7403d8ed38b5d"
+    },
+    {
+      "id": "gear-instruments-t1",
+      "path": "assets/gear/instruments-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "593b4fd80bacdc573bb555d6a47704ec096de41364776b0d7a67f418619bfed2"
+    },
+    {
+      "id": "gear-instruments-t2",
+      "path": "assets/gear/instruments-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "28fe12bcb3c402e64ca515e957592e4042e93c330575713b06cb9db964f760ca"
+    },
+    {
+      "id": "gear-instruments-t3",
+      "path": "assets/gear/instruments-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "43cb74709fb653a5feb561892b99efbb4ddeaddba05b789f7df23f710badc05f"
+    },
+    {
+      "id": "gear-instruments-t4",
+      "path": "assets/gear/instruments-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "b7f63473ddabf0caf7d0997e859bbf31a4f10e448c4684812c7f8ecc4d0a20dd"
+    },
+    {
+      "id": "gear-instruments-t5",
+      "path": "assets/gear/instruments-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "d94742dea993ac1fcef67f54c7836e5974406e853d697b4f676ab7d18834895e"
+    },
+    {
+      "id": "gear-merch-t1",
+      "path": "assets/gear/merch-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "3b4f4d144effb5f080d9538ab9a8a421741d52e75da14a394f89f638de4f2286"
+    },
+    {
+      "id": "gear-merch-t2",
+      "path": "assets/gear/merch-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "739eb814dab6121fa93c5b6f687794aca12750624bc6d0b41c57155dafbee4bf"
+    },
+    {
+      "id": "gear-merch-t3",
+      "path": "assets/gear/merch-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "77d8b94731a251f3fc7a0771eceb2030edbb3213dbac602a98fed13b4dbc04db"
+    },
+    {
+      "id": "gear-merch-t4",
+      "path": "assets/gear/merch-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "d827738cf96d218614e59e865fc082f0e0816c7a46533430975bd91f6480bc7e"
+    },
+    {
+      "id": "gear-merch-t5",
+      "path": "assets/gear/merch-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "27d2602ace32f5ca81389eba5f72c8cab4f85084664e47a82f1bc931098e18ac"
+    },
+    {
+      "id": "gear-studio-t1",
+      "path": "assets/gear/studio-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "c240bb0e25c0c25771cfc9c972efb0c7439fb3523d07d282413d92f4215f41d4"
+    },
+    {
+      "id": "gear-studio-t2",
+      "path": "assets/gear/studio-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "bfedbef0f605249f29df6a08cc387202b6bd7eaf0c0793be39b2b1f01b65458a"
+    },
+    {
+      "id": "gear-studio-t3",
+      "path": "assets/gear/studio-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "222b5a52caaca79969d1856c0bb4e7925f1783aee15ce2beaa3c6568817738be"
+    },
+    {
+      "id": "gear-studio-t4",
+      "path": "assets/gear/studio-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "b0d711dcaa87d80d0658f9e8204388a5124a3b8f5a5924d7df34ee15bc26f73c"
+    },
+    {
+      "id": "gear-studio-t5",
+      "path": "assets/gear/studio-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "5c6cacb5db2f7b39309bbc0e0688dce210a94b6c1c4e1edb64a502904311f25c"
+    },
+    {
+      "id": "gear-transport-t1",
+      "path": "assets/gear/transport-t1.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "7dd198ccae8b1cc706f69dd3f3f3db25797932bc06370483f9243106651d101d"
+    },
+    {
+      "id": "gear-transport-t2",
+      "path": "assets/gear/transport-t2.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "78f1420151e20625f0bf8bc999e72980d50d111be35d8999ec46ba3cca029a3c"
+    },
+    {
+      "id": "gear-transport-t3",
+      "path": "assets/gear/transport-t3.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "d1c09541cb6edae52986f9ab690d01a563abf8f19de882a091c216d6dffaaa7b"
+    },
+    {
+      "id": "gear-transport-t4",
+      "path": "assets/gear/transport-t4.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "df6ac9420401536d2de0bd6270b36f3514ce6ba43842840dcfc98d92ad7fb1c3"
+    },
+    {
+      "id": "gear-transport-t5",
+      "path": "assets/gear/transport-t5.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "7ce19c6c580ab0cd5245a4b1a956ea9f86db5673c456bd7e45713ac574b7f756"
+    },
+    {
+      "id": "icons-arrow",
+      "path": "assets/icons/arrow.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "fbc1e7e5a01dd03e070ba88eb73a31ffaff2a79d0257fb250c2516668379535b"
+    },
+    {
+      "id": "icons-back",
+      "path": "assets/icons/back.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "a885cd0d25f2547ff57651eb728a8f4b624929824f798c7db3eea39801606efb"
+    },
+    {
+      "id": "icons-bass",
+      "path": "assets/icons/bass.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "d4206a93190c2d6c17687c245d3495231629282c7c0f62cbc185524bcab8a0d6"
+    },
+    {
+      "id": "icons-calendar",
+      "path": "assets/icons/calendar.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "2868b340da14b80c57ece6ba2d939b1d342f0b67b462037a4a40059ee777a154"
+    },
+    {
+      "id": "icons-cash",
+      "path": "assets/icons/cash.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "6c3bc09db4ec15878cc04e4cb035ce7212798fe65db220e29b560987cd92aae9"
+    },
+    {
+      "id": "icons-chart",
+      "path": "assets/icons/chart.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "3274aba115e71b7892c5e199ba205bce63fcba2b2270c2fa2f0cf27a09a82d5c"
+    },
+    {
+      "id": "icons-chat",
+      "path": "assets/icons/chat.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "96100fab32521a821865bd6e9dc127ce8fc82c22432ca58f470eb63afd9a7847"
+    },
+    {
+      "id": "icons-check",
+      "path": "assets/icons/check.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "e5db6108c1b8bb3bd51a664bab371c5cd1be8a98ac1a48f5f6e286ed1b801082"
+    },
+    {
+      "id": "icons-clock",
+      "path": "assets/icons/clock.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "2bd94988efc404d30e6e0860f6cbf57428768a5df32006ed1d861a2c6611d558"
+    },
+    {
+      "id": "icons-close",
+      "path": "assets/icons/close.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "0112912ebac4bf6053984342a2f333a280423bf60c3edf7a290d50ab01f7d35d"
+    },
+    {
+      "id": "icons-crew",
+      "path": "assets/icons/crew.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "acf7bc7193e01bce3ea3704666ec53cebbe8cfcf687d080749b07a609ac08f5e"
+    },
+    {
+      "id": "icons-drums",
+      "path": "assets/icons/drums.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "415b8f556d92070f62b49422b3a32cffe2314b6a8a41132c137c0956e1b6496c"
+    },
+    {
+      "id": "icons-energy",
+      "path": "assets/icons/energy.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "5fcd004c46a666f891e68d7d0bed1d7d50a00bda33688bcc95746f8add719cb3"
+    },
+    {
+      "id": "icons-fame",
+      "path": "assets/icons/fame.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "464272828e9f987063b61115d61412ca8085142d706fa2a114d5fd8558ece499"
+    },
+    {
+      "id": "icons-fans",
+      "path": "assets/icons/fans.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "3e4f43a27dc3c6d97b19e9c318b85fdc8d01a7adff483a56d1acabb1e853ce1f"
+    },
+    {
+      "id": "icons-festival",
+      "path": "assets/icons/festival.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "786a45c155accc599d881525b6e758d6dde3227ffe7ab706c49c01680abb1d0e"
+    },
+    {
+      "id": "icons-guitar",
+      "path": "assets/icons/guitar.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "63ee37eb27893d4af2d367a008f90559e959897e668cd2a150e41673bda696b0"
+    },
+    {
+      "id": "icons-hq",
+      "path": "assets/icons/hq.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "ac48e73c15d55daa1f8befd6ece88638b1a8621856eff5f1973b6966fe826543"
+    },
+    {
+      "id": "icons-hype",
+      "path": "assets/icons/hype.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "8eedac8679636113dd923a3a10dc5949c5b40fc753bdfa91490727d801d312b4"
+    },
+    {
+      "id": "icons-keys",
+      "path": "assets/icons/keys.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "e160d62709b6c46555477af562a1f673397e9822bd9863564d5124aa7b267d94"
+    },
+    {
+      "id": "icons-link",
+      "path": "assets/icons/link.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "08d53affdb1a946119bdfaedca7b4893da2d9f36ad4160e0c7838c4840de8ddf"
+    },
+    {
+      "id": "icons-lock",
+      "path": "assets/icons/lock.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "d5586b4c7a600984029fe38804eb2691c6187dd9a18f6f75c5b4a106fa677a97"
+    },
+    {
+      "id": "icons-mail",
+      "path": "assets/icons/mail.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "ee823e4ed42df4463c8d736a2e2a093f59f0345b38776d57943f51d2b0a25e0d"
+    },
+    {
+      "id": "icons-map",
+      "path": "assets/icons/map.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "70dead71f1162bd2fda67b2060c296db0da4e67c8def5eb4a99c060692749293"
+    },
+    {
+      "id": "icons-mic",
+      "path": "assets/icons/mic.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "c50a157f083a1467012af7b2acd6e2efef2357d8f17925b727e4c1fdb6c96742"
+    },
+    {
+      "id": "icons-moon",
+      "path": "assets/icons/moon.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "22d6c19d794f2408bb02905b05f0a5def3c783c59aac9cb076f3944c4af63269"
+    },
+    {
+      "id": "icons-morale",
+      "path": "assets/icons/morale.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "6012e596fef6456bc8996aba6aa1ae421f5104499531e1cc06441cd62f2ce7fb"
+    },
+    {
+      "id": "icons-pause",
+      "path": "assets/icons/pause.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "85b6236eaa782e51e054cada2b0cf9e3ee81f9b211780d6a78146abf321569f4"
+    },
+    {
+      "id": "icons-pin",
+      "path": "assets/icons/pin.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "0f076e06300442a03722ed6a84cd355491083142412a3a3f03c8475e9d32a356"
+    },
+    {
+      "id": "icons-play",
+      "path": "assets/icons/play.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "99e2124476f9128a90ec8c8632a090979542bd65335af4df8fd1b6561f7e86a1"
+    },
+    {
+      "id": "icons-plus",
+      "path": "assets/icons/plus.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "7629a5be3991585209676d15a96198a8d9d757d2fb5319b4021da2e3cadba4da"
+    },
+    {
+      "id": "icons-record",
+      "path": "assets/icons/record.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "64b3ed90c50ed896eba2f16bf7c6816ed46424c8e7a92d542cc413d3d3d10bb8"
+    },
+    {
+      "id": "icons-save",
+      "path": "assets/icons/save.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "f432d9e495d1620a700028325a60961eef497b511173e190e9d4b497522e49b4"
+    },
+    {
+      "id": "icons-settings",
+      "path": "assets/icons/settings.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "cca79e1d18d2e7a9fdc155e5479a79a6e29bbb4fb6efbbe0475bed1b4b542997"
+    },
+    {
+      "id": "icons-shield",
+      "path": "assets/icons/shield.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "0a733004bb536f7ae4d530b5653cc8540c89a6f25e5689411472516bc192de0d"
+    },
+    {
+      "id": "icons-shop",
+      "path": "assets/icons/shop.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "1068bf4d0ea022c560f55499f01a6bf7d68e3de3575f629930825594e3d5d3f0"
+    },
+    {
+      "id": "icons-sound",
+      "path": "assets/icons/sound.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "9cc7c4bf1054955b674602657c7254cd4ad04066095feb80457f1d12cc771afa"
+    },
+    {
+      "id": "icons-ticket",
+      "path": "assets/icons/ticket.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "4dd79663c6b882b868bdef1bb8eaa48da2f8b887dfe23f051811784e808bd145"
+    },
+    {
+      "id": "icons-trophy",
+      "path": "assets/icons/trophy.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "769ae67541bd7c2425a61263bacbb003d0a46e6d8c33eb077f527550157e69dd"
+    },
+    {
+      "id": "icons-upload",
+      "path": "assets/icons/upload.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "7cb5e0321bd6f40df7d5906439b777205a46a6ca4d8a4c7b8ed63c8bd2657d13"
+    },
+    {
+      "id": "icons-weather",
+      "path": "assets/icons/weather.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "62d4e7c1a0cec5a3b6cc22b0090aa3964717bdc12ce283ec34c2ad497f70c3d1"
+    },
+    {
+      "id": "posters-muddy-boots",
+      "path": "assets/posters/muddy-boots.svg",
+      "format": "svg",
+      "viewBox": "0 0 1080 1350",
+      "status": "editable_vector",
+      "sha256": "c847c7f6122d5b3e4a3fdd90b5639663db67541979428ebc43b54b07abcfd3b2"
+    },
+    {
+      "id": "posters-neon-valley",
+      "path": "assets/posters/neon-valley.svg",
+      "format": "svg",
+      "viewBox": "0 0 1080 1350",
+      "status": "editable_vector",
+      "sha256": "6968942149ab9f22753cd23471a076ca08cd9b5f8f9c8ffc3afe0adfa0abbc1e"
+    },
+    {
+      "id": "posters-riverside-sounds",
+      "path": "assets/posters/riverside-sounds.svg",
+      "format": "svg",
+      "viewBox": "0 0 1080 1350",
+      "status": "editable_vector",
+      "sha256": "b5fb79be5e604ef5390d38cb0353ee9baf11e188acf041fc8b6e8eb9b8950bba"
+    },
+    {
+      "id": "posters-solstice",
+      "path": "assets/posters/solstice.svg",
+      "format": "svg",
+      "viewBox": "0 0 1080 1350",
+      "status": "editable_vector",
+      "sha256": "50fef65506e3609a23da0ac26725a75ee52fda782fd12d32c3ad7f252060ed2b"
+    },
+    {
+      "id": "posters-thunderdome",
+      "path": "assets/posters/thunderdome.svg",
+      "format": "svg",
+      "viewBox": "0 0 1080 1350",
+      "status": "editable_vector",
+      "sha256": "293054f51a4fbfca7a51aaf795f7b59650e301423c9e3ed593b096433d3bd843"
+    },
+    {
+      "id": "rhythm-hit-burst",
+      "path": "assets/rhythm/hit-burst.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "84c44976fce866f128c43a7be6e1b3ff36335cdc80cc89bf5a2d3c455f923c20"
+    },
+    {
+      "id": "rhythm-hit-ring",
+      "path": "assets/rhythm/hit-ring.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "a2e2f65c70b7c64339f0c12cd2fa57e0a9d37189f3fa027d415fbe207ecdccdb"
+    },
+    {
+      "id": "rhythm-lane-surface",
+      "path": "assets/rhythm/lane-surface.svg",
+      "format": "svg",
+      "viewBox": "0 0 384 640",
+      "status": "editable_vector",
+      "sha256": "3e3f14c6561f63929047f1f375a47e90100087acc908a95e721b41428be6ed2d"
+    },
+    {
+      "id": "rhythm-note-d-circle",
+      "path": "assets/rhythm/note-d-circle.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "f113aebd0f97287ed613c52e37fa6fe1aeea2a54c06392e1fcc3502db4937ea1"
+    },
+    {
+      "id": "rhythm-note-f-diamond",
+      "path": "assets/rhythm/note-f-diamond.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "1bde20308ad0fef28e9864861ba828e7369ce9ec86b3b16d173fae6700acdf43"
+    },
+    {
+      "id": "rhythm-note-j-square",
+      "path": "assets/rhythm/note-j-square.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "480baad69551dd1e7873ef137cd712d56d8e4a0acf655645f81f07bab8cfa061"
+    },
+    {
+      "id": "rhythm-note-k-triangle",
+      "path": "assets/rhythm/note-k-triangle.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 64",
+      "status": "editable_vector",
+      "sha256": "2119842af184780ba1d3d85059552131734eea4fa684250de1d1dc61d35905ab"
+    },
+    {
+      "id": "rhythm-sustain-tail",
+      "path": "assets/rhythm/sustain-tail.svg",
+      "format": "svg",
+      "viewBox": "0 0 64 128",
+      "status": "editable_vector",
+      "sha256": "802d0671e00e870a8b42d3581133af785fe389f9a0ef05555e4ef710c5769e31"
+    }
+  ]
+}

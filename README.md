@@ -7,8 +7,8 @@ Mobile and web browser.
 
 | Folder | What goes here |
 |---|---|
-| `docs/` | Game design document, music tribes & skins, Claude handoff |
-| `design/kit/` | The original design kit, **unchanged** (PNG/SVG masters, tokens, manifest, fonts) |
+| `docs/` | Game design document, music tribes & skins |
+| `design/kit/` | Design kit v1, **unchanged**: PNG/SVG masters, tokens, manifest, fonts, visual guide. Start with `design/kit/AMPED_Claude_Handoff.md` |
 | `game/` | The playable web prototype (HTML/CSS/JS) and its runtime assets |
 | `tools/` | Scripts that prepare runtime assets from the design kit (resize, crop, compress) |
 

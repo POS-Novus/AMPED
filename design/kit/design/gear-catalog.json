@@ -1,0 +1,282 @@
+[
+  {
+    "id": "instruments-t1",
+    "name": "Pawn-shop guitar",
+    "category": "instruments",
+    "tier": 1,
+    "path": "assets/gear/instruments-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "instruments-t2",
+    "name": "Reliable solidbody",
+    "category": "instruments",
+    "tier": 2,
+    "path": "assets/gear/instruments-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "instruments-t3",
+    "name": "Stage custom",
+    "category": "instruments",
+    "tier": 3,
+    "path": "assets/gear/instruments-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "instruments-t4",
+    "name": "Studio signature",
+    "category": "instruments",
+    "tier": 4,
+    "path": "assets/gear/instruments-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "instruments-t5",
+    "name": "Solstice signature",
+    "category": "instruments",
+    "tier": 5,
+    "path": "assets/gear/instruments-t5.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "amps-t1",
+    "name": "Practice combo",
+    "category": "amps",
+    "tier": 1,
+    "path": "assets/gear/amps-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "amps-t2",
+    "name": "Club stack",
+    "category": "amps",
+    "tier": 2,
+    "path": "assets/gear/amps-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "amps-t3",
+    "name": "Tour PA",
+    "category": "amps",
+    "tier": 3,
+    "path": "assets/gear/amps-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "amps-t4",
+    "name": "Arena array",
+    "category": "amps",
+    "tier": 4,
+    "path": "assets/gear/amps-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "amps-t5",
+    "name": "Stadium line array",
+    "category": "amps",
+    "tier": 5,
+    "path": "assets/gear/amps-t5.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "studio-t1",
+    "name": "Laptop and mic",
+    "category": "studio",
+    "tier": 1,
+    "path": "assets/gear/studio-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "studio-t2",
+    "name": "Home interface",
+    "category": "studio",
+    "tier": 2,
+    "path": "assets/gear/studio-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "studio-t3",
+    "name": "Project desk",
+    "category": "studio",
+    "tier": 3,
+    "path": "assets/gear/studio-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "studio-t4",
+    "name": "Analog console",
+    "category": "studio",
+    "tier": 4,
+    "path": "assets/gear/studio-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "studio-t5",
+    "name": "Mastering suite",
+    "category": "studio",
+    "tier": 5,
+    "path": "assets/gear/studio-t5.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "transport-t1",
+    "name": "Uncle's van",
+    "category": "transport",
+    "tier": 1,
+    "path": "assets/gear/transport-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "transport-t2",
+    "name": "Crew van",
+    "category": "transport",
+    "tier": 2,
+    "path": "assets/gear/transport-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "transport-t3",
+    "name": "Tour bus",
+    "category": "transport",
+    "tier": 3,
+    "path": "assets/gear/transport-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "transport-t4",
+    "name": "Sleeper coach",
+    "category": "transport",
+    "tier": 4,
+    "path": "assets/gear/transport-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "transport-t5",
+    "name": "Private jet",
+    "category": "transport",
+    "tier": 5,
+    "path": "assets/gear/transport-t5.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "fx-t1",
+    "name": "Fairy lights",
+    "category": "fx",
+    "tier": 1,
+    "path": "assets/gear/fx-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "fx-t2",
+    "name": "Spotlight rig",
+    "category": "fx",
+    "tier": 2,
+    "path": "assets/gear/fx-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "fx-t3",
+    "name": "Haze and washes",
+    "category": "fx",
+    "tier": 3,
+    "path": "assets/gear/fx-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "fx-t4",
+    "name": "Laser system",
+    "category": "fx",
+    "tier": 4,
+    "path": "assets/gear/fx-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "fx-t5",
+    "name": "LED and pyro stage",
+    "category": "fx",
+    "tier": 5,
+    "path": "assets/gear/fx-t5.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "merch-t1",
+    "name": "Hand-printed tee",
+    "category": "merch",
+    "tier": 1,
+    "path": "assets/gear/merch-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "merch-t2",
+    "name": "Screen-print run",
+    "category": "merch",
+    "tier": 2,
+    "path": "assets/gear/merch-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "merch-t3",
+    "name": "Tour hoodie",
+    "category": "merch",
+    "tier": 3,
+    "path": "assets/gear/merch-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "merch-t4",
+    "name": "Premium capsule",
+    "category": "merch",
+    "tier": 4,
+    "path": "assets/gear/merch-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "merch-t5",
+    "name": "Clothing line",
+    "category": "merch",
+    "tier": 5,
+    "path": "assets/gear/merch-t5.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "crew-t1",
+    "name": "Helpful friend",
+    "category": "crew",
+    "tier": 1,
+    "path": "assets/gear/crew-t1.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "crew-t2",
+    "name": "Roadie",
+    "category": "crew",
+    "tier": 2,
+    "path": "assets/gear/crew-t2.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "crew-t3",
+    "name": "Sound engineer",
+    "category": "crew",
+    "tier": 3,
+    "path": "assets/gear/crew-t3.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "crew-t4",
+    "name": "Manager",
+    "category": "crew",
+    "tier": 4,
+    "path": "assets/gear/crew-t4.svg",
+    "status": "ready vector icon"
+  },
+  {
+    "id": "crew-t5",
+    "name": "Full tour crew",
+    "category": "crew",
+    "tier": 5,
+    "path": "assets/gear/crew-t5.svg",
+    "status": "ready vector icon"
+  }
+]

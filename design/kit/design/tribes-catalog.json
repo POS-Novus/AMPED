@@ -1,0 +1,556 @@
+{
+  "version": "1.0",
+  "note": "Logical positions are not pixel crop coordinates. 15 identities, 30 cosmetic looks. Source sheets need preparation.",
+  "tribes": [
+    {
+      "id": "headbangers",
+      "name": "Headbangers",
+      "conceptSheet": "assets/characters/tribes/tribe-headbangers.png",
+      "status": "concept_sheet_needs_preparation",
+      "characters": [
+        {
+          "id": "headbangers_a",
+          "displayName": "Headbangers A",
+          "skins": [
+            {
+              "id": "headbangers_a_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "headbangers_a_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "headbangers_b",
+          "displayName": "Headbangers B",
+          "skins": [
+            {
+              "id": "headbangers_b_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "headbangers_b_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "headbangers_c",
+          "displayName": "Headbangers C",
+          "skins": [
+            {
+              "id": "headbangers_c_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "headbangers_c_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "punks",
+      "name": "Punks",
+      "conceptSheet": "assets/characters/tribes/tribe-punks.png",
+      "status": "concept_sheet_needs_preparation",
+      "characters": [
+        {
+          "id": "punks_a",
+          "displayName": "Punks A",
+          "skins": [
+            {
+              "id": "punks_a_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "punks_a_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "punks_b",
+          "displayName": "Punks B",
+          "skins": [
+            {
+              "id": "punks_b_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "punks_b_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "punks_c",
+          "displayName": "Punks C",
+          "skins": [
+            {
+              "id": "punks_c_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "punks_c_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hippies",
+      "name": "Hippies",
+      "conceptSheet": "assets/characters/tribes/tribe-hippies.png",
+      "status": "concept_sheet_needs_preparation",
+      "characters": [
+        {
+          "id": "hippies_a",
+          "displayName": "Hippies A",
+          "skins": [
+            {
+              "id": "hippies_a_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "hippies_a_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "hippies_b",
+          "displayName": "Hippies B",
+          "skins": [
+            {
+              "id": "hippies_b_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "hippies_b_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "hippies_c",
+          "displayName": "Hippies C",
+          "skins": [
+            {
+              "id": "hippies_c_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "hippies_c_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kpop",
+      "name": "K-pop",
+      "conceptSheet": "assets/characters/tribes/tribe-kpop.png",
+      "status": "concept_sheet_needs_preparation",
+      "characters": [
+        {
+          "id": "kpop_a",
+          "displayName": "K-pop A",
+          "skins": [
+            {
+              "id": "kpop_a_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "kpop_a_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "kpop_b",
+          "displayName": "K-pop B",
+          "skins": [
+            {
+              "id": "kpop_b_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "kpop_b_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "kpop_c",
+          "displayName": "K-pop C",
+          "skins": [
+            {
+              "id": "kpop_c_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "kpop_c_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "trappers",
+      "name": "Trappers",
+      "conceptSheet": "assets/characters/tribes/tribe-trappers.png",
+      "status": "concept_sheet_needs_preparation",
+      "characters": [
+        {
+          "id": "trappers_a",
+          "displayName": "Trappers A",
+          "skins": [
+            {
+              "id": "trappers_a_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "trappers_a_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 0
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "trappers_b",
+          "displayName": "Trappers B",
+          "skins": [
+            {
+              "id": "trappers_b_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "trappers_b_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 1
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        },
+        {
+          "id": "trappers_c",
+          "displayName": "Trappers C",
+          "skins": [
+            {
+              "id": "trappers_c_base",
+              "name": "Base",
+              "logicalPosition": {
+                "row": 0,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            },
+            {
+              "id": "trappers_c_stage",
+              "name": "Stage",
+              "logicalPosition": {
+                "row": 1,
+                "column": 2
+              },
+              "runtimeTexture": null,
+              "status": "concept_only",
+              "cosmeticOnly": true,
+              "gameplayModifiers": {},
+              "price": null,
+              "unlockRule": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
