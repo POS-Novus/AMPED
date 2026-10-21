@@ -213,6 +213,68 @@ window.AmpedAudio = (() => {
     return oc.startRendering();
   }
 
+  // ---------- recorded songs ----------
+  const buffers = {};
+  async function load(url) {
+    ensure();
+    if (!buffers[url]) {
+      buffers[url] = fetch(url).then((r) => {
+        if (!r.ok) throw new Error(`${url}: ${r.status}`);
+        return r.arrayBuffer();
+      }).then((data) => new Promise((ok, bad) => ctx.decodeAudioData(data, ok, bad)));
+      buffers[url].catch(() => { delete buffers[url]; });
+    }
+    return buffers[url];
+  }
+
+  // Plays a decoded recording at an exact audio-clock time. A miss muffles it briefly,
+  // since a mixed recording has no separate instrument to drop out.
+  function playBuffer(buffer, startAt) {
+    ensure();
+    const src = ctx.createBufferSource(); src.buffer = buffer;
+    const tone = ctx.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 20000;
+    const g = ctx.createGain();
+    src.connect(tone); tone.connect(g); g.connect(musicBus);
+    src.start(startAt);
+    return {
+      duck() {
+        const t = ctx.currentTime;
+        tone.frequency.cancelScheduledValues(t);
+        tone.frequency.setValueAtTime(700, t);
+        tone.frequency.exponentialRampToValueAtTime(20000, t + 0.45);
+      },
+      stop() {
+        const t = ctx.currentTime;
+        g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + 0.15);
+        try { src.stop(t + 0.2); } catch { /* already stopped */ }
+      }
+    };
+  }
+
+  // ---------- menu music: one looping track, faded in and out ----------
+  const menu = (() => {
+    let node = null, gain = null, wanted = false, url = null;
+    async function play(trackUrl) {
+      url = trackUrl; wanted = true;
+      if (node) return;
+      const buf = await load(url);
+      if (!wanted || node) return;
+      gain = ctx.createGain(); gain.gain.value = 0; gain.connect(musicBus);
+      node = ctx.createBufferSource(); node.buffer = buf; node.loop = true; node.connect(gain);
+      node.start();
+      gain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 1.5);
+    }
+    function stop() {
+      wanted = false;
+      if (!node) return;
+      const n = node, g = gain, t = ctx.currentTime;
+      node = gain = null;
+      g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + 0.6);
+      setTimeout(() => { try { n.stop(); } catch { /* ignore */ } g.disconnect(); }, 700);
+    }
+    return { play, stop, resume: () => url && play(url) };
+  })();
+
   // ---------- metronome for calibration ----------
   function click(t, accent) {
     ensure();
@@ -243,5 +305,5 @@ window.AmpedAudio = (() => {
     boo() { ensure(); tone(ctx.currentTime, 110, "sawtooth", 0.12, 0.9); }
   };
 
-  return { unlock, setVolumes, now, suspend, resume, playArrangement, renderOffline, click, sfx };
+  return { unlock, setVolumes, now, suspend, resume, playArrangement, renderOffline, load, playBuffer, menu, click, sfx };
 })();

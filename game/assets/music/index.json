@@ -1,0 +1,52 @@
+[
+  {
+    "id": "rock-theme-3",
+    "title": "Rock Theme 3",
+    "artist": "Umplix",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "page": "https://opengameart.org/content/rock-theme-3",
+    "role": "gig",
+    "changes": "Loudness normalised and encoded to MP3."
+  },
+  {
+    "id": "not-trash",
+    "title": "I am not Trash, or am I?",
+    "artist": "Centurion_of_war",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "page": "https://opengameart.org/node/115075",
+    "role": "gig",
+    "changes": "Loudness normalised and encoded to MP3."
+  },
+  {
+    "id": "black-rock",
+    "title": "Black Rock",
+    "artist": "marcelofg55 (Marcelo Fernandez)",
+    "license": "CC-BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "page": "https://opengameart.org/content/black-rock",
+    "role": "gig",
+    "changes": "Shortened to the first 80 seconds with a fade-out, loudness normalised and re-encoded to MP3."
+  },
+  {
+    "id": "bright-eyes",
+    "title": "Bright Eyes",
+    "artist": "tomcat",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "page": "https://opengameart.org/node/186000",
+    "role": "gig",
+    "changes": "Loudness normalised and encoded to MP3."
+  },
+  {
+    "id": "lofi-loop",
+    "title": "Lofi Hip Hop Loop",
+    "artist": "omfgdude",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "page": "https://opengameart.org/content/lofi-hip-hop-loop",
+    "role": "menu",
+    "changes": "Loudness normalised and encoded to MP3."
+  }
+]

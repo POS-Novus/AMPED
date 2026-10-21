@@ -14,8 +14,14 @@ window.AmpedRhythm = (() => {
     const assist = 1 + Math.max(0, Math.min(0.25, ((opts.skill || 25) - 25) / 200));
     const win = { perfect: R.windows.perfect * assist, great: R.windows.great * assist, good: R.windows.good * assist };
     const diff = R.difficulties[opts.difficulty];
-    const arr = window.AmpedComposer.compose(opts.song);
-    const spb = 60 / arr.bpm;
+    // Either a recorded cover (opts.track = { meta, buffer }) or a generated arrangement.
+    const C = window.AmpedComposer, track = opts.track;
+    const arr = track ? null : C.compose(opts.song);
+    const bpm = track ? track.meta.bpm : arr.bpm;
+    const spb = 60 / bpm;
+    const footLabel = track
+      ? `Cover · ${esc(track.meta.title)} by ${esc(track.meta.artist)} (${esc(track.meta.license)})`
+      : `Placeholder music · ${esc(arr.key)} · ${bpm} BPM`;
     const offset = (opts.settings.offsetMs || 0) / 1000;
     const keys = opts.settings.keys || lanes.map((l) => l.key);
 
@@ -40,7 +46,7 @@ window.AmpedRhythm = (() => {
           <div class="rh-hitline"></div>
           <div class="rh-notes" aria-hidden="true"></div>
         </div>
-        <div class="rh-foot"><span><span data-time></span> · <span data-section></span></span><span class="rh-temp">Placeholder music · ${esc(arr.key)} · ${arr.bpm} BPM</span></div>
+        <div class="rh-foot"><span><span data-time></span> · <span data-section></span></span><span class="rh-temp">${footLabel}</span></div>
         <div class="rh-overlay" hidden></div>
       </div>`;
 
@@ -52,13 +58,15 @@ window.AmpedRhythm = (() => {
     const scene = window.AmpedScene.mount($(".rh-stage"), { scene: opts.scene, members: opts.members, ambience: false });
     scene.setLive(true);
 
-    const chart = window.AmpedComposer.chart(arr, opts.role, opts.difficulty);
+    const chart = track ? C.trackChart(track.meta, opts.role, opts.difficulty) : C.chart(arr, opts.role, opts.difficulty);
     const t0 = A.now() + 0.8;                       // count-in starts here
     const songStart = t0 + R.countIn * spb;
-    const notes = chart.map((n) => ({ ...n, t: songStart + n.beat * spb, el: null, done: false }));
+    const firstBeat = track ? track.meta.firstBeat : 0;   // recordings start a little before beat 1
+    const notes = chart.map((n) => ({ ...n, t: songStart + firstBeat + n.beat * spb, el: null, done: false }));
     const lastT = notes.length ? notes[notes.length - 1].t : songStart;
-    const songEnd = songStart + arr.beats * spb;
-    const music = A.playArrangement(arr, t0, R.countIn);
+    const songEnd = songStart + (track ? track.meta.duration : arr.beats * spb);
+    // generated songs get stick clicks in the count-in; recordings get a silent visual count
+    const music = track ? A.playBuffer(track.buffer, songStart) : A.playArrangement(arr, t0, R.countIn);
     const stopMusic = () => music.stop();
 
     const st = { score: 0, streak: 0, maxStreak: 0, crowd: opts.crowdStart || R.crowd.start, counts: { perfect: 0, great: 0, good: 0, miss: 0 }, paused: false, over: false };
@@ -90,7 +98,7 @@ window.AmpedRhythm = (() => {
       if (grade === "miss") {
         st.streak = 0;
         A.sfx.miss();
-        music.duck(opts.role);
+        music.duck(opts.role);   // generated: your part drops out; recording: brief muffle
         laneEls[n.lane].classList.remove("is-miss"); void laneEls[n.lane].offsetWidth; laneEls[n.lane].classList.add("is-miss");
       } else {
         st.streak++;
@@ -158,8 +166,8 @@ window.AmpedRhythm = (() => {
       const songPos = Math.max(0, vis - songStart);
       $("[data-time]").textContent = `${fmt(songPos)} / ${fmt(songEnd - songStart)}`;
       const beatNow = (vis - songStart) / spb;
-      const sec = arr.sections.filter((x) => x.beat <= beatNow).pop();
-      const secName = beatNow < 0 ? "Count-in" : sec ? sec.name : "";
+      const sec = arr && arr.sections.filter((x) => x.beat <= beatNow).pop();
+      const secName = beatNow < 0 ? "Count-in" : sec ? sec.name : track ? "Live" : "";
       if (secName !== lastSection) { lastSection = secName; $("[data-section]").textContent = secName; }
       if (vis > Math.max(lastT, songEnd) + 0.6 && !finishTimer) finishTimer = setTimeout(finish, 400);
       raf = requestAnimationFrame(frame);

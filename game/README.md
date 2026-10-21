@@ -25,7 +25,8 @@ The game also pauses when the tab is hidden or the window loses focus.
 | `css/app.css` | All UI styling, built on the kit tokens; DejaVu Sans from the kit |
 | `js/data.js` | Content and tuning: members, scene layouts, venue, songwriting, costs, rhythm settings |
 | `js/composer.js` | Arranges each song (key, tempo, intro/verse/chorus/outro, five parts) from its theme and style; builds charts from the part you play |
-| `js/audio.js` | Web Audio clock, synth band that plays arrangements (live and offline), metronome, SFX |
+| `js/audio.js` | Web Audio clock, synth band for generated songs, recorded-song playback, menu music loop, metronome, SFX |
+| `assets/music/` | Recorded covers and menu loop (MP3) with machine-made charts (JSON), built by `tools/prepare_music.py`; credits in `docs/MUSIC_CREDITS.md` |
 | `js/scene.js` | Backdrop + band placement + ambience (rain, light flicker, dust, notes) |
 | `js/rhythm.js` | Chart generation, judging on the audio clock, HUD, pause, fail |
 | `js/main.js` | State, saving, views (HQ, Band, Music, Gigs, Shop), sheets, calibration, rewards |
@@ -42,6 +43,9 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 - Band roster and member sheet (stats, energy, morale, lesson, nap)
 - Songwriting: title, theme, style, hidden combo bonuses, song list with quality and practice level
 - Gig booking at the pub: song, part (each role has its own chart), difficulty, costs, tired-member blocking
+- **Menu music**: a CC0 lofi loop starts on the first tap (browsers block sound before that) and fades out for gigs
+- **Covers**: four real CC0 / CC-BY recordings playable at the pub, charted automatically per part (drums by kick/snare/hat, pitched parts by pitch); a miss briefly muffles the recording
+- Music credits in Settings (required for the CC-BY track)
 - Generated songs: theme picks the key/mode, style picks tempo and feel (Ballad, Anthem, Banger); drums, bass, distorted guitar, keys and a sung lead line with room reverb
 - Charts from the actual notes of your part, thinned by difficulty in seconds so fast songs stay fair
 - Rhythm gig: four lanes with the kit note shapes, hit line, ring/burst effects, crowd energy, score, streak multiplier, judgements, time, pause/resume with countdown, leave stage, booed off at 0 crowd
@@ -59,7 +63,7 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 - Not tested on real phones or with real players yet. Audio latency on Bluetooth headphones untested.
 
 ### Remaining (not done)
-- **Music**: songs are generated and synthesised in code (placeholder). Each song has its own key, tempo, structure and melody, and the chart follows the part you play; a miss ducks your part. Real recorded songs, hand-authored charts, SFX and voices are still needed for release.
+- **Music**: cover charts are machine-made from mixed recordings, so some notes may not match what you'd expect to play; hand-checking each chart is still needed. Your own songs are generated and synthesised in code (placeholder). Each song has its own key, tempo, structure and melody, and the chart follows the part you play; a miss ducks your part. Real recorded songs, hand-authored charts, SFX and voices are still needed for release.
 - **Animation**: characters are static cutouts with whole-sprite bob/sway only. Needed: idle, play, celebrate, tired, frustrated poses or rigs; seated drummer + kit; portrait expressions.
 - **Story**: Moira tutorial, uncle's note, choices (story-cast sheet needs individual portrait crops).
 - **Gear shop** (locked screen only), more venues, HQ tiers, festivals, multiplayer, accounts.

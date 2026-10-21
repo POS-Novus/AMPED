@@ -173,7 +173,6 @@ window.AmpedComposer = (() => {
 
   // Chart for the part you play: [{ beat, lane }] taken from that part's actual notes.
   function chart(arr, role, difficulty) {
-    const rule = RULES[difficulty] || RULES.normal;
     const mine = arr.events.filter((e) => e.part === role && e.beat < arr.beats);
     let cands;
     if (role === "drums") {
@@ -190,8 +189,14 @@ window.AmpedComposer = (() => {
         if (difficulty === "hard" && ((role === "guitar" && e.kind === "power") || e.kind === "pad") && e.dur >= 1) cands.push({ beat: e.beat, lane: (lane(e.midi) + 2) % 4, accent: true, prio: 1 });
       });
     }
+    return thin(cands, 60 / arr.bpm, difficulty);
+  }
+
+  // Thins candidate notes for a difficulty: which offbeats count, minimum gap in seconds,
+  // and at most N lanes per instant (highest priority first). Used by generated and recorded songs.
+  function thin(cands, spb, difficulty, minGap) {
+    const rule = { ...(RULES[difficulty] || RULES.normal), ...(minGap ? { gap: minGap } : {}) };
     cands = cands.filter((c) => (c.beat % 1 === 0) || rule.offbeats === true || (rule.offbeats === "accent" && c.accent));
-    const spb = 60 / arr.bpm;
     const out = [];
     let lastBeat = -Infinity;
     for (let i = 0; i < cands.length;) {
@@ -207,5 +212,16 @@ window.AmpedComposer = (() => {
     return out;
   }
 
-  return { compose, chart };
+  // Chart for a recorded song (game/assets/music/<id>.json, made by tools/prepare_music.py).
+  function trackChart(track, role, difficulty) {
+    const hard = difficulty === "hard";
+    // detected sixteenths are for listening, not playing: none below Hard, accented ones on Hard
+    const notes = (track.parts[role] || []).filter((n) => (role !== "drums" || n.k !== "hat" || hard) && (n.b % 0.5 === 0 || (hard && n.a)));
+    const cands = notes.map((n) => ({ beat: n.b, lane: n.l, accent: n.a, prio: { snare: 3, kick: 2 }[n.k] || (role === "drums" ? 1 : 2) }))
+      .sort((a, b) => a.beat - b.beat);
+    return thin(cands, 60 / track.bpm, difficulty, TRACK_GAP[difficulty]);
+  }
+  const TRACK_GAP = { easy: 0.45, normal: 0.26, hard: 0.16 };
+
+  return { compose, chart, trackChart };
 })();
