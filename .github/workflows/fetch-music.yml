@@ -17,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python3 tools/fetch_music.py out ${{ inputs.urls }}
+      - env:
+          URLS: ${{ inputs.urls }}
+        run: python3 tools/fetch_music.py out $URLS
       - uses: actions/upload-artifact@v4
         with:
           name: music-candidates
