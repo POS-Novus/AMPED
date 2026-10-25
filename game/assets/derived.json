@@ -123,6 +123,156 @@
       "process": "webp q86, no resize"
     },
     {
+      "id": "club",
+      "path": "assets/venues/club.webp",
+      "from": "assets/world/venue-evolution.png",
+      "cropBounds": [
+        628,
+        0,
+        1254,
+        395
+      ],
+      "size": [
+        626,
+        395
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "theatre",
+      "path": "assets/venues/theatre.webp",
+      "from": "assets/world/venue-evolution.png",
+      "cropBounds": [
+        0,
+        396,
+        627,
+        793
+      ],
+      "size": [
+        627,
+        397
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "arena",
+      "path": "assets/venues/arena.webp",
+      "from": "assets/world/venue-evolution.png",
+      "cropBounds": [
+        628,
+        396,
+        1254,
+        793
+      ],
+      "size": [
+        626,
+        397
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "stadium",
+      "path": "assets/venues/stadium.webp",
+      "from": "assets/world/venue-evolution.png",
+      "cropBounds": [
+        0,
+        815,
+        627,
+        1233
+      ],
+      "size": [
+        627,
+        418
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "street",
+      "path": "assets/venues/street.webp",
+      "from": "assets/world/venue-evolution.png",
+      "cropBounds": [
+        628,
+        815,
+        1254,
+        1233
+      ],
+      "size": [
+        626,
+        418
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "muddy-boots",
+      "path": "assets/venues/muddy-boots.webp",
+      "from": "assets/world/festival-evolution.png",
+      "cropBounds": [
+        0,
+        0,
+        627,
+        418
+      ],
+      "size": [
+        627,
+        418
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "riverside",
+      "path": "assets/venues/riverside.webp",
+      "from": "assets/world/festival-evolution.png",
+      "cropBounds": [
+        627,
+        0,
+        1254,
+        418
+      ],
+      "size": [
+        627,
+        418
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "neon-valley",
+      "path": "assets/venues/neon-valley.webp",
+      "from": "assets/world/festival-evolution.png",
+      "cropBounds": [
+        0,
+        418,
+        627,
+        836
+      ],
+      "size": [
+        627,
+        418
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "thunderdome",
+      "path": "assets/venues/thunderdome.webp",
+      "from": "assets/world/festival-evolution.png",
+      "cropBounds": [
+        627,
+        418,
+        1254,
+        836
+      ],
+      "size": [
+        627,
+        418
+      ],
+      "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop"
+    },
+    {
+      "id": "solstice",
+      "path": "assets/venues/solstice.webp",
+      "from": "assets/world/festival-solstice-backdrop.png",
+      "process": "webp q86, no resize"
+    },
+    {
       "folder": "assets/brand/",
       "from": "assets/brand/",
       "process": "copied unchanged"
@@ -135,6 +285,11 @@
     {
       "folder": "assets/rhythm/",
       "from": "assets/rhythm/",
+      "process": "copied unchanged"
+    },
+    {
+      "folder": "assets/posters/",
+      "from": "assets/posters/",
       "process": "copied unchanged"
     },
     {

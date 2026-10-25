@@ -24,7 +24,21 @@ BACKDROPS = {
     "venue-pub-backdrop": "world/venue-pub-backdrop.png",
     "keyart-garage": "marketing/keyart-garage.png",
 }
-SVG_FOLDERS = ["brand", "icons", "rhythm"]
+SVG_FOLDERS = ["brand", "icons", "rhythm", "posters"]
+
+# Concept-sheet panels cut into individual scenes. Bounds were measured from the pixels
+# (venue sheet: 1px divider lines at y=395, y=793, x=627; festival sheet: seams at y=418, y=836, x=627).
+# The venue sheet's bottom row is 460px tall; it is trimmed evenly to 418 so every scene is 3:2.
+CROPS = {
+    "venue-evolution": {
+        "club": (628, 0, 1254, 395), "theatre": (0, 396, 627, 793), "arena": (628, 396, 1254, 793),
+        "stadium": (0, 815, 627, 1233), "street": (628, 815, 1254, 1233),
+    },
+    "festival-evolution": {
+        "muddy-boots": (0, 0, 627, 418), "riverside": (627, 0, 1254, 418),
+        "neon-valley": (0, 418, 627, 836), "thunderdome": (627, 418, 1254, 836),
+    },
+}
 
 
 def sha256(path):
@@ -63,6 +77,23 @@ def main():
             "id": bid, "path": f"assets/world/{bid}.webp", "from": f"assets/{rel}",
             "size": [im.width, im.height], "process": "webp q86, no resize",
         })
+
+    (OUT / "venues").mkdir(parents=True, exist_ok=True)
+    for sheet, panels in CROPS.items():
+        src = KIT / manifest[sheet]["path"]
+        assert sha256(src) == manifest[sheet]["sha256"], f"{src} does not match the manifest"
+        im = Image.open(src).convert("RGB")
+        for name, box in panels.items():
+            dst = OUT / "venues" / f"{name}.webp"
+            im.crop(box).save(dst, quality=88, method=6)
+            derived["files"].append({
+                "id": name, "path": f"assets/venues/{name}.webp", "from": manifest[sheet]["path"],
+                "cropBounds": list(box), "size": [box[2] - box[0], box[3] - box[1]],
+                "process": "cropped concept-sheet panel (measured bounds), webp q88; concept art, not a production backdrop",
+            })
+    sol = KIT / manifest["festival-solstice-backdrop"]["path"]
+    Image.open(sol).convert("RGB").save(OUT / "venues" / "solstice.webp", quality=86, method=6)
+    derived["files"].append({"id": "solstice", "path": "assets/venues/solstice.webp", "from": manifest["festival-solstice-backdrop"]["path"], "process": "webp q86, no resize"})
 
     for folder in SVG_FOLDERS:
         dst_dir = OUT / folder

@@ -60,16 +60,23 @@ window.AmpedAudio = (() => {
     }));
   }
 
-  // Which sampled instruments each song style uses.
+  // Which sampled instruments a song uses, from its groove (genre, guitar tone, drum kit).
   function setupFor(arr) {
-    const style = arr.style || "Anthem";
+    const g = arr.groove || {}, tone = g.tone || "dist";
+    const G = (window.AmpedComposer && window.AmpedComposer.GENRES[g.genre]) || {};
     return {
-      kit: style === "Ballad" ? "drums-standard" : "drums-power",
-      keys: style === "Anthem" ? "organ" : "piano",
-      guitar: "guitar-power", clean: "guitar-clean", bass: "bass-pick", voice: "voice-lead", choir: "voice-choir"
+      tone,
+      kit: { power: "drums-power", standard: "drums-standard", electronic: "drums-electronic" }[g.kit] || "drums-power",
+      keys: { organ: "organ", piano: "piano", pad: "pad" }[G.keys] || "piano",
+      chord: { clean: "guitar-clean", crunch: "guitar-od-power", dist: "guitar-power", metal: "guitar-power", synth: "saw-lead" }[tone],
+      single: { clean: "guitar-clean", crunch: "guitar-od", dist: "guitar-dist", metal: "guitar-dist", synth: "saw-lead" }[tone],
+      clean: "guitar-clean",
+      bass: g.genre === "electronic" ? "synth-bass" : "bass-pick",
+      voice: "voice-lead", choir: "voice-choir"
     };
   }
-  const instrumentsFor = (arr) => [...new Set(Object.values(setupFor(arr)))];
+  const SETUP_KEYS = ["kit", "keys", "chord", "single", "clean", "bass", "voice", "choir"];
+  const instrumentsFor = (arr) => { const s = setupFor(arr); return [...new Set(SETUP_KEYS.map((k) => s[k]))]; };
 
   // MP3 decoders may add a few ms of silence at the start; skip it so hits land on time.
   const leadIn = new WeakMap();
@@ -86,7 +93,9 @@ window.AmpedAudio = (() => {
   // ---------- the band (sampled, with the synth as fallback; works on live and offline contexts) ----------
   const LEVELS = { drums: 0.9, bass: 0.62, guitar: 0.34, keys: 0.2, vocals: 0.34 };
   // balanced by measuring each part solo (tools: render previews); the soundfont samples are quiet
-  const SAMPLE_LEVELS = { drums: 1.6, bass: 3.2, guitar: 7.2, keys: 10, vocals: 7.7 };
+  const SAMPLE_LEVELS = { drums: 1.6, bass: 3.2, guitar: 7.2, keys: 10, vocals: 10.5 };
+  // guitar tones differ a lot in loudness; measured per tone so the mix stays balanced
+  const TONE_LEVEL = { clean: 1, crunch: 0.68, dist: 0.85, metal: 0.72, synth: 1 };
 
   function createBand(c, out, noiseBuffer, setup) {
     const comp = c.createDynamicsCompressor();
@@ -183,11 +192,30 @@ window.AmpedAudio = (() => {
       src.start(t + rnd(0.003), offsetOf(s.buffer));
       return true;
     }
-    const lowGuitar = (m) => { while (m > 57) m -= 12; while (m < 38) m += 12; return m; };
+    const metal = setup && setup.tone === "metal";
+    const lowGuitar = (m) => { const lo = metal ? 33 : 38; while (m > lo + 19) m -= 12; while (m < lo) m += 12; return m; };
+    // metal: an extra high-gain stage after the distorted samples, with a tight low end and forward mids
+    let guitarIn = parts.guitar.sgain;
+    if (setup) parts.guitar.sgain.gain.value = SAMPLE_LEVELS.guitar * (TONE_LEVEL[setup.tone] || 1);
+    if (setup && setup.tone === "metal") parts.vocals.sgain.gain.value = SAMPLE_LEVELS.vocals * 1.35;   // sing over the wall of guitars
+    if (metal) {
+      const pre = c.createGain(); pre.gain.value = 2.6;
+      const shaper = c.createWaveShaper(); const k = new Float32Array(2049);
+      for (let i = 0; i < k.length; i++) { const x = i / 1024 - 1; k[i] = Math.tanh(x * 4); }
+      shaper.curve = k; shaper.oversample = "4x";
+      const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 95;
+      const mid = c.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 2200; mid.gain.value = 5; mid.Q.value = 0.9;
+      const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6500;
+      const post = c.createGain(); post.gain.value = 0.2;
+      pre.connect(shaper); shaper.connect(hp); hp.connect(mid); mid.connect(lp); lp.connect(post); post.connect(parts.guitar.sgain);
+      guitarIn = pre;
+    }
     let crashSide = 1;
     const sampled = setup ? {
       kick: (e, t) => hit("kick", t, e.vel),
       snare: (e, t) => hit("snare", t, e.vel, { send: 0.25 }),
+      clap: (e, t) => hit("clap", t, e.vel, { send: 0.3 }),
+      china: (e, t) => hit("china", t, e.vel, { pan: -0.35, send: 0.2 }),
       hat: (e, t) => hit("hat", t, e.vel * 0.85, { pan: 0.3 }),
       ohat: (e, t) => hit("ohat", t, e.vel * 0.85, { pan: 0.3 }),
       crash: (e, t) => { crashSide = -crashSide; return hit(crashSide > 0 ? "crash" : "crash2", t, e.vel, { pan: 0.45 * crashSide, send: 0.2 }); },
@@ -195,20 +223,32 @@ window.AmpedAudio = (() => {
       bass: (e, t, spb) => sample(setup.bass, e.midi, t + rnd(0.004), e.dur * spb * 0.95, 1 + rnd(0.08), parts.bass.sgain, { release: 0.06, lowpass: 3500 }),
       guitar(e, t, spb) {
         const dur = e.dur * spb;
-        if (e.kind === "pluck") return sample(setup.clean, e.midi, t + rnd(0.006), dur, 0.9, parts.guitar.sgain, { release: 0.35, pan: 0.3, send: 0.25 });
-        const muted = e.kind === "mute", m = lowGuitar(e.midi);
-        const o = muted ? { release: 0.04, lowpass: 1500 } : { release: 0.1, lowpass: 6500 };
-        const d = muted ? 0.11 : dur, lvl = muted ? 0.75 : 0.95;
+        if (e.kind === "pluck") return sample(setup.tone === "clean" ? setup.clean : setup.single, e.midi, t + rnd(0.006), dur, 0.9, guitarIn, { release: 0.35, pan: 0.3, send: 0.25 });
+        if (e.kind === "synth") return sample("saw-lead", e.midi, t, dur * 0.9, 1.1, parts.guitar.sgain, { release: 0.08, pan: 0.2, send: 0.25, lowpass: 5000 });
+        const muted = e.kind === "mute", single = e.kind === "note", m = lowGuitar(e.midi);
+        const o = muted ? { release: 0.04, lowpass: metal ? 1900 : 1500 } : { release: 0.1, lowpass: 6500 };
+        const d = muted ? (metal ? 0.09 : 0.11) : dur, lvl = muted ? 0.75 : 0.95;
         // double-tracked: two takes panned wide, slightly apart in time and tuning
-        const ok = sample(setup.guitar, m, t + rnd(0.004), d, lvl, parts.guitar.sgain, { ...o, pan: -0.75 });
-        sample(setup.guitar, m, t + 0.011 + rnd(0.004), d, lvl, parts.guitar.sgain, { ...o, pan: 0.75, cents: 6 });
+        const take = (pan, delay, cents) => {
+          if (single) return sample(setup.single, e.midi, t + delay + rnd(0.004), d, lvl, guitarIn, { ...o, pan, cents });
+          if (setup.tone === "clean" || setup.tone === "synth") {
+            // strum a real chord shape: root, fifth, octave, a few ms apart
+            let ok = true;
+            [0, 7, 12].forEach((iv, n) => { ok = sample(setup.chord, m + 12 + iv, t + delay + n * 0.012, d, lvl * 0.6, guitarIn, { ...o, pan, cents, release: muted ? 0.04 : 0.3 }) && ok; });
+            return ok;
+          }
+          return sample(setup.chord, m, t + delay + rnd(0.004), d, lvl, guitarIn, { ...o, pan, cents });
+        };
+        const ok = take(-0.75, 0, 0);
+        take(0.75, 0.011, 6);
         return ok;
       },
       keys(e, t, spb) {
-        const dur = e.dur * spb, organ = setup.keys === "organ";
-        const o = { attack: organ ? 0.02 : 0.003, release: organ ? 0.12 : 0.4, pan: 0.25, send: 0.2 };
+        const dur = e.dur * spb, organ = setup.keys === "organ", pad = setup.keys === "pad" && e.kind === "pad";
+        const o = { attack: pad ? 0.2 : organ ? 0.02 : 0.003, release: pad ? 0.6 : organ ? 0.12 : 0.4, pan: 0.25, send: pad ? 0.4 : 0.2 };
         let ok = true;
-        (e.notes || [e.midi]).forEach((m) => { ok = sample(setup.keys, m, t + rnd(0.005), dur, e.kind === "pad" ? 0.55 : 0.7 * e.vel, parts.keys.sgain, o) && ok; });
+        const inst = e.kind === "arp" && setup.keys === "pad" ? "saw-lead" : setup.keys;
+        (e.notes || [e.midi]).forEach((m) => { ok = sample(inst, m, t + rnd(0.005), dur, e.kind === "pad" ? 0.55 : 0.7 * e.vel, parts.keys.sgain, o) && ok; });
         // backing "aahs" under chorus chords
         if (e.kind === "pad") (e.notes || []).forEach((m) => sample(setup.choir, m, t, dur, 0.28, parts.vocals.sgain, { attack: 0.15, release: 0.4, pan: -0.3, send: 0.45 }));
         return ok;
@@ -283,6 +323,8 @@ window.AmpedAudio = (() => {
         [f1, f2, lp].forEach((n) => o.connect(n));
         o.start(t); o.stop(t + dur + 0.2); lfo.start(t); lfo.stop(t + dur + 0.2);
       },
+      clap(e, t) { this.snare(e, t); },
+      china(e, t) { this.crash(e, t); },
       sticks(t, accent) { noise(env(parts.drums.gain, t, 0.001, accent ? 0.6 : 0.4, 0, 0.04), t, 0.06, "bandpass", 3000, 4); }
     };
 
@@ -334,6 +376,41 @@ window.AmpedAudio = (() => {
     return {
       duck: band.duck,
       stop() { stopped = true; clearInterval(timer); band.fadeOut(); }
+    };
+  }
+
+  // Loops a short arrangement for the studio preview. getArr() is called at the start of every
+  // loop, so edits are heard on the next pass. position() gives the current step (0..31) for a playhead.
+  function playLoop(getArr) {
+    ensure();
+    let arr = getArr(), band = null, key = "", stopped = false, i = 0;
+    let cycleStart = ctx.currentTime + 0.12;
+    const fresh = () => {
+      const k = JSON.stringify(setupFor(arr));
+      if (k !== key) { if (band) band.fadeOut(); band = createBand(ctx, musicBus, noiseBuf, setupFor(arr)); key = k; }
+    };
+    fresh();
+    const pump = () => {
+      if (stopped) return;
+      const horizon = ctx.currentTime + 0.3;
+      for (;;) {
+        const spb = 60 / arr.bpm;
+        if (i >= arr.events.length) {
+          if (cycleStart + arr.beats * spb > horizon) break;
+          cycleStart += arr.beats * spb; arr = getArr(); fresh(); i = 0;
+          continue;
+        }
+        const e = arr.events[i], t = cycleStart + e.beat * spb;
+        if (t > horizon) break;
+        if (t >= ctx.currentTime - 0.02) band.schedule(e, t, spb);
+        i++;
+      }
+    };
+    pump();
+    const timer = setInterval(pump, 30);
+    return {
+      stop() { stopped = true; clearInterval(timer); band.fadeOut(); },
+      position() { const spb = 60 / arr.bpm; return Math.floor(((ctx.currentTime - cycleStart) / spb) * 4); }
     };
   }
 
@@ -444,5 +521,5 @@ window.AmpedAudio = (() => {
     boo() { ensure(); tone(ctx.currentTime, 110, "sawtooth", 0.12, 0.9); }
   };
 
-  return { unlock, setVolumes, now, suspend, resume, playArrangement, renderOffline, loadInstruments, instrumentsFor, load, playBuffer, menu, click, sfx };
+  return { unlock, setVolumes, now, suspend, resume, playArrangement, playLoop, renderOffline, loadInstruments, instrumentsFor, load, playBuffer, menu, click, sfx };
 })();

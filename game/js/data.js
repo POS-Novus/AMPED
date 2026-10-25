@@ -1,6 +1,20 @@
 // Game content and tuning. Art paths point at runtime copies made by tools/prepare_assets.py.
 // Positions in scenes are percentages of the backdrop (3:2), so they track the art at any size.
 // Names, prices and numbers here are working values, not approved balance.
+// Five players across a stage: centre x, feet line y, player height h, spacing (all % of the backdrop).
+function stage(src, x, y, h, gap) {
+  return {
+    src,
+    slots: {
+      vocals: { x: x - gap * 2, y, h, z: 3 },
+      drums:  { x: x - gap, y: y - h * 0.12, h: h * 0.85, z: 1 },
+      guitar: { x, y: y + h * 0.04, h: h * 1.05, z: 5 },
+      bass:   { x: x + gap, y: y - h * 0.05, h: h * 0.95, z: 2 },
+      keys:   { x: x + gap * 2, y, h: h * 0.95, z: 4 }
+    }
+  };
+}
+
 window.AMPED_DATA = {
   saveVersion: 3,
 
@@ -59,6 +73,16 @@ window.AMPED_DATA = {
         ]
       }
     },
+    street:        stage("assets/venues/street.webp", 52, 92, 40, 9),
+    club:          stage("assets/venues/club.webp", 52, 64, 26, 6.5),
+    "muddy-boots": stage("assets/venues/muddy-boots.webp", 51, 54, 19, 5.5),
+    riverside:     stage("assets/venues/riverside.webp", 51, 63, 20, 6),
+    theatre:       stage("assets/venues/theatre.webp", 49, 81, 26, 6),
+    "neon-valley": stage("assets/venues/neon-valley.webp", 50, 61, 18, 5),
+    arena:         stage("assets/venues/arena.webp", 50, 69, 16, 4.5),
+    thunderdome:   stage("assets/venues/thunderdome.webp", 51, 65, 20, 5.5),
+    stadium:       stage("assets/venues/stadium.webp", 50, 69, 12, 3.5),
+    solstice:      stage("assets/venues/solstice.webp", 50, 60, 18, 5),
     pub: {
       src: "assets/world/venue-pub-backdrop.webp",
       slots: {
@@ -79,9 +103,35 @@ window.AMPED_DATA = {
     }
   },
 
-  venues: {
-    pub: { id: "pub", name: "The Crane Bar", scene: "pub", capacity: 80, ticket: 6, tags: ["Open mic", "80 capacity"] }
-  },
+  // The Road to Solstice. Unlocks: fame level, wins at an earlier venue, number of songs written.
+  // tough: how much harder the crowd is to win (miss penalty multiplier). Prices and numbers are working values.
+  venues: [
+    { id: "street", name: "Quay Street", type: "Busking", act: 1, scene: "street", capacity: 40, ticket: 0, tips: 2, tough: 0.8,
+      blurb: "Open the guitar case and play for passers-by. No tickets, just tips.", needs: {} },
+    { id: "pub", name: "The Crane Bar", type: "Pub", act: 1, scene: "pub", capacity: 80, ticket: 6, tough: 1,
+      blurb: "Open mic night. The regulars have heard it all.", needs: {} },
+    { id: "muddy-boots", name: "Muddy Boots Fest", type: "Festival", act: 1, scene: "muddy-boots", capacity: 600, ticket: 10, tough: 1.1, poster: "assets/posters/muddy-boots.svg",
+      blurb: "A field, a stage and a lot of mud. Your first festival.", needs: { fame: 2, winsAt: { pub: 3 } } },
+    { id: "club", name: "The Vault", type: "Club", act: 2, scene: "club", capacity: 300, ticket: 12, tough: 1.15,
+      blurb: "Sticky floors, loud speakers, a real crowd.", needs: { fame: 3 } },
+    { id: "riverside", name: "Riverside Sounds", type: "Festival", act: 2, scene: "riverside", capacity: 2500, ticket: 15, tough: 1.2, poster: "assets/posters/riverside-sounds.svg",
+      blurb: "Summer evening by the water. Bring three songs of your own.", needs: { fame: 5, songs: 3 } },
+    { id: "theatre", name: "The Grand", type: "Theatre", act: 3, scene: "theatre", capacity: 1200, ticket: 20, tough: 1.25,
+      blurb: "Velvet seats and perfect sound. Every mistake is heard.", needs: { fame: 7, winsAt: { club: 2 } } },
+    { id: "neon-valley", name: "Neon Valley", type: "Festival", act: 3, scene: "neon-valley", capacity: 15000, ticket: 22, tough: 1.3, poster: "assets/posters/neon-valley.svg",
+      blurb: "Three stages, lasers, a national crowd.", needs: { fame: 9, winsAt: { riverside: 1 } } },
+    { id: "arena", name: "Harbour Arena", type: "Arena", act: 4, scene: "arena", capacity: 12000, ticket: 35, tough: 1.4,
+      blurb: "Your name on the screens. Your first headline tour.", needs: { fame: 12, winsAt: { theatre: 2 } } },
+    { id: "thunderdome", name: "Thunderdome Open Air", type: "Festival", act: 4, scene: "thunderdome", capacity: 40000, ticket: 40, tough: 1.5, poster: "assets/posters/thunderdome.svg",
+      blurb: "Europe's loudest weekend. Storms guaranteed.", needs: { fame: 15, winsAt: { "neon-valley": 1 } } },
+    { id: "stadium", name: "Northfield Stadium", type: "Stadium", act: 5, scene: "stadium", capacity: 60000, ticket: 50, tough: 1.6,
+      blurb: "Sixty thousand phones in the air.", needs: { fame: 18, winsAt: { arena: 2 } } },
+    { id: "solstice", name: "Solstice", type: "Festival", act: 5, scene: "solstice", capacity: 100000, ticket: 60, tough: 1.75, poster: "assets/posters/solstice.svg",
+      blurb: "The festival your uncle never played. Finish what they started.", needs: { fame: 22, winsAt: { thunderdome: 1 } } }
+  ],
+  acts: { 1: "Hometown", 2: "The Circuit", 3: "The Breakout", 4: "The Tour", 5: "Solstice" },
+  // fans needed to reach a fame level
+  fameFans: (level) => Math.round(100 * Math.pow(level - 1, 1.6)),
 
   songwriting: {
     themes: ["Love", "Rebellion", "Party", "Heartbreak"],

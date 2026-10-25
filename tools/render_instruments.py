@@ -27,7 +27,12 @@ SR = 44100
 PITCHED_STEP = 3   # render every minor third; the browser shifts by at most 1 semitone either way
 INSTRUMENTS = {
     "guitar-dist":  dict(bank=0, preset=30, keys=range(40, 80, PITCHED_STEP), length=2.6, vel=[110]),
-    "guitar-power": dict(bank=0, preset=30, keys=range(38, 60, 2), length=2.6, vel=[110], chord=[0, 7, 12]),
+    "guitar-power": dict(bank=0, preset=30, keys=range(32, 60, 2), length=2.6, vel=[110], chord=[0, 7, 12]),
+    "guitar-od":    dict(bank=0, preset=29, keys=range(40, 80, PITCHED_STEP), length=2.6, vel=[110]),
+    "guitar-od-power": dict(bank=0, preset=29, keys=range(34, 60, 2), length=2.6, vel=[110], chord=[0, 7, 12]),
+    "synth-bass":   dict(bank=0, preset=38, keys=range(28, 58, PITCHED_STEP), length=1.6, vel=[110]),
+    "saw-lead":     dict(bank=0, preset=81, keys=range(48, 90, PITCHED_STEP), length=2.0, vel=[100]),
+    "pad":          dict(bank=0, preset=89, keys=range(43, 85, PITCHED_STEP), length=4.0, vel=[95]),
     "guitar-clean": dict(bank=0, preset=27, keys=range(40, 80, PITCHED_STEP), length=2.6, vel=[100]),
     "guitar-steel": dict(bank=0, preset=25, keys=range(40, 80, PITCHED_STEP), length=2.6, vel=[100]),
     "bass-pick":    dict(bank=0, preset=34, keys=range(28, 58, PITCHED_STEP), length=2.0, vel=[110]),
@@ -37,9 +42,9 @@ INSTRUMENTS = {
     "voice-choir":  dict(bank=0, preset=52, keys=range(46, 82, PITCHED_STEP), length=3.5, vel=[90]),
 }
 # GM drum keys: kick, snare, side stick, closed hat, pedal hat, open hat, crash, crash 2, ride, toms high..low
-DRUM_KEYS = {"kick": 36, "snare": 38, "rim": 37, "hat": 42, "pedal": 44, "ohat": 46, "crash": 49, "crash2": 57,
-             "ride": 51, "tom1": 50, "tom2": 48, "tom3": 45, "tom4": 43}
-KITS = {"drums-power": 16, "drums-standard": 0}
+DRUM_KEYS = {"kick": 36, "snare": 38, "rim": 37, "clap": 39, "hat": 42, "pedal": 44, "ohat": 46, "crash": 49, "crash2": 57,
+             "china": 52, "ride": 51, "tom1": 50, "tom2": 48, "tom3": 45, "tom4": 43}
+KITS = {"drums-power": 16, "drums-standard": 0, "drums-electronic": 25}
 DRUM_VELS = [70, 118]
 
 
@@ -101,7 +106,7 @@ def main():
             for piece, key in DRUM_KEYS.items():
                 pieces[piece] = []
                 for v in DRUM_VELS:
-                    y = render(synth, sfid, 128, preset, [key], 1.6 if piece in ("crash", "crash2", "ride", "ohat") else 0.8, v, drums=True, release=0.4)
+                    y = render(synth, sfid, 128, preset, [key], 1.6 if piece in ("crash", "crash2", "china", "ride", "ohat") else 0.8, v, drums=True, release=0.4)
                     if y is None:
                         continue
                     name = f"{piece}-{v}.mp3"

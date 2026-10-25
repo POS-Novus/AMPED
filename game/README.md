@@ -10,8 +10,8 @@ Opening `index.html` straight from disk will not work (browsers block loading th
 
 ## The loop
 
-Title → **Garage HQ** → practise / write a song / rest → **Book the pub** → pick song, part and difficulty →
-timing check (first time) → **rhythm gig on the pub stage** → **results** (rewards, review, goal progress) → saved → back to HQ.
+Title → name the band and pick its genre → **Garage HQ** → practise / **write a song in the studio** / rest → **Map** (Road to Solstice) → book an unlocked venue → pick song, part and difficulty →
+timing check (first time) → **rhythm gig, filmed like a concert** → **results** (rewards, review, unlocks) → saved → back to HQ or the map.
 
 Controls in a gig: **D F J K** (remappable in Settings) or tap the lanes. **Esc** or **P** pauses.
 The game also pauses when the tab is hidden or the window loses focus.
@@ -24,13 +24,14 @@ The game also pauses when the tab is hidden or the window loses focus.
 | `css/tokens.css` | Copied unchanged from `design/kit/design/tokens.css` |
 | `css/app.css` | All UI styling, built on the kit tokens; DejaVu Sans from the kit |
 | `js/data.js` | Content and tuning: members, scene layouts, venue, songwriting, costs, rhythm settings |
-| `js/composer.js` | Arranges each song (key, tempo, intro/verse/chorus/outro, five parts) from its theme and style; builds charts from the part you play |
+| `js/composer.js` | Genre presets (metal, rock, punk, pop, indie, electronic) and the groove model the studio edits (tempo, tone, kit, chords, 16-step beat and riff); arranges each song into intro/verse/chorus/outro for five parts; builds charts from the part you play |
 | `js/audio.js` | Web Audio clock, synth band for generated songs, recorded-song playback, menu music loop, metronome, SFX |
 | `assets/instruments/` | Sampled band instruments (drum kits, guitars, bass, piano, organ, voices) rendered by `tools/render_instruments.py` |
 | `assets/music/` | Licensed recordings + auto-charts (none at the moment; pipeline in `tools/prepare_music.py`) |
 | `js/scene.js` | Backdrop + band placement + ambience (rain, light flicker, dust, notes) |
+| `js/director.js` | Gig camera: beat-timed cuts between wide, close-up, two-shot and crowd shots with push-ins, genre-coloured lights, foreground crowd |
 | `js/rhythm.js` | Chart generation, judging on the audio clock, HUD, pause, fail |
-| `js/main.js` | State, saving, views (HQ, Band, Music, Gigs, Shop), sheets, calibration, rewards |
+| `js/main.js` | State, saving, views (HQ, Band, Map, Studio, Shop), venue unlocks, sheets, calibration, rewards |
 | `assets/` | Runtime copies made by `tools/prepare_assets.py` from `design/kit/` (see `assets/derived.json`) |
 
 To rebuild the assets: `python3 tools/prepare_assets.py` from the repository root (needs Pillow).
@@ -47,6 +48,9 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 - **Real instruments**: generated songs play on sampled drums, double-tracked distorted guitar, pick bass, piano/organ, a lead voice and backing choir, with timing/velocity humanising and a stereo mix (synth fallback if a sample fails to load)
 - **Menu music**: the band's own instrumental theme, rendered once and looped; starts on the first tap and fades out for gigs
 - Music credits in Settings
+- **Map (Road to Solstice)**: 11 venues from the street corner to the Solstice festival, in acts; each unlocks by fame, wins at earlier venues and songs written; venue sheet with capacity, pay, crowd toughness; bigger venues pay more and punish misses harder
+- **Studio**: pick genre, guitar tone (clean / crunch / distorted / metal / synth), drum kit, tempo, chords and chorus feel; program the beat and the guitar riff on 16-step grids; hear verse/chorus live before recording
+- **Gig camera**: cuts on the beat between wide shots, close-ups, two-shots and a shot from the pit; flash on section changes, light pulses in choruses, a foreground crowd that grows with the venue; reduced motion keeps one steady wide shot
 - Generated songs: theme picks the key/mode, style picks tempo and feel (Ballad, Anthem, Banger); drums, bass, distorted guitar, keys and a sung lead line with room reverb
 - Charts from the actual notes of your part, thinned by difficulty in seconds so fast songs stay fair
 - Rhythm gig: four lanes with the kit note shapes, hit line, ring/burst effects, crowd energy, score, streak multiplier, judgements, time, pause/resume with countdown, leave stage, booed off at 0 crowd
@@ -65,9 +69,9 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 
 ### Remaining (not done)
 - **Music**: songs are generated and played on sampled instruments. The lead voice sings a melody on an "ooh/aah" sound; real lyrics need a singer or commissioned songs. Commissioned songs with stems can use `tools/prepare_music.py`. Each song has its own key, tempo, structure and melody, and the chart follows the part you play; a miss ducks your part. Real recorded songs, hand-authored charts, SFX and voices are still needed for release.
-- **Animation**: characters are static cutouts with whole-sprite bob/sway only. Needed: idle, play, celebrate, tired, frustrated poses or rigs; seated drummer + kit; portrait expressions.
+- **Animation**: characters are static cutouts; the gig camera, lights and crowd move, the players don't. Needed: idle, play, celebrate, tired, frustrated poses or rigs; seated drummer + kit; portrait expressions.
 - **Story**: Moira tutorial, uncle's note, choices (story-cast sheet needs individual portrait crops).
-- **Gear shop** (locked screen only), more venues, HQ tiers, festivals, multiplayer, accounts.
+- **Gear shop** (locked screen only), HQ tiers, venue-specific events, multiplayer, accounts. Venue scenes are crops of the concept sheets, not production backdrops.
 - **Rhythm**: sustain notes (only a cyan tail exists in the kit), per-lane tail colours, gear effects on timing.
 - **Balance**: all prices, rewards and crowd numbers are working values. Hard difficulty loses an idle crowd in ~4 s.
 - **Accessibility review** with a screen reader; larger text settings.

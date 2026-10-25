@@ -83,6 +83,21 @@
    "preset": 30,
    "notes": [
     {
+     "key": 32,
+     "vel": 110,
+     "file": "assets/instruments/guitar-power/32-110.mp3"
+    },
+    {
+     "key": 34,
+     "vel": 110,
+     "file": "assets/instruments/guitar-power/34-110.mp3"
+    },
+    {
+     "key": 36,
+     "vel": 110,
+     "file": "assets/instruments/guitar-power/36-110.mp3"
+    },
+    {
      "key": 38,
      "vel": 110,
      "file": "assets/instruments/guitar-power/38-110.mp3"
@@ -136,6 +151,361 @@
      "key": 58,
      "vel": 110,
      "file": "assets/instruments/guitar-power/58-110.mp3"
+    }
+   ]
+  },
+  "guitar-od": {
+   "type": "pitched",
+   "preset": 29,
+   "notes": [
+    {
+     "key": 40,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/40-110.mp3"
+    },
+    {
+     "key": 43,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/43-110.mp3"
+    },
+    {
+     "key": 46,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/46-110.mp3"
+    },
+    {
+     "key": 49,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/49-110.mp3"
+    },
+    {
+     "key": 52,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/52-110.mp3"
+    },
+    {
+     "key": 55,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/55-110.mp3"
+    },
+    {
+     "key": 58,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/58-110.mp3"
+    },
+    {
+     "key": 61,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/61-110.mp3"
+    },
+    {
+     "key": 64,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/64-110.mp3"
+    },
+    {
+     "key": 67,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/67-110.mp3"
+    },
+    {
+     "key": 70,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/70-110.mp3"
+    },
+    {
+     "key": 73,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/73-110.mp3"
+    },
+    {
+     "key": 76,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/76-110.mp3"
+    },
+    {
+     "key": 79,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od/79-110.mp3"
+    }
+   ]
+  },
+  "guitar-od-power": {
+   "type": "pitched",
+   "preset": 29,
+   "notes": [
+    {
+     "key": 34,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/34-110.mp3"
+    },
+    {
+     "key": 36,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/36-110.mp3"
+    },
+    {
+     "key": 38,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/38-110.mp3"
+    },
+    {
+     "key": 40,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/40-110.mp3"
+    },
+    {
+     "key": 42,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/42-110.mp3"
+    },
+    {
+     "key": 44,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/44-110.mp3"
+    },
+    {
+     "key": 46,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/46-110.mp3"
+    },
+    {
+     "key": 48,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/48-110.mp3"
+    },
+    {
+     "key": 50,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/50-110.mp3"
+    },
+    {
+     "key": 52,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/52-110.mp3"
+    },
+    {
+     "key": 54,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/54-110.mp3"
+    },
+    {
+     "key": 56,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/56-110.mp3"
+    },
+    {
+     "key": 58,
+     "vel": 110,
+     "file": "assets/instruments/guitar-od-power/58-110.mp3"
+    }
+   ]
+  },
+  "synth-bass": {
+   "type": "pitched",
+   "preset": 38,
+   "notes": [
+    {
+     "key": 28,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/28-110.mp3"
+    },
+    {
+     "key": 31,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/31-110.mp3"
+    },
+    {
+     "key": 34,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/34-110.mp3"
+    },
+    {
+     "key": 37,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/37-110.mp3"
+    },
+    {
+     "key": 40,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/40-110.mp3"
+    },
+    {
+     "key": 43,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/43-110.mp3"
+    },
+    {
+     "key": 46,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/46-110.mp3"
+    },
+    {
+     "key": 49,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/49-110.mp3"
+    },
+    {
+     "key": 52,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/52-110.mp3"
+    },
+    {
+     "key": 55,
+     "vel": 110,
+     "file": "assets/instruments/synth-bass/55-110.mp3"
+    }
+   ]
+  },
+  "saw-lead": {
+   "type": "pitched",
+   "preset": 81,
+   "notes": [
+    {
+     "key": 48,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/48-100.mp3"
+    },
+    {
+     "key": 51,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/51-100.mp3"
+    },
+    {
+     "key": 54,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/54-100.mp3"
+    },
+    {
+     "key": 57,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/57-100.mp3"
+    },
+    {
+     "key": 60,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/60-100.mp3"
+    },
+    {
+     "key": 63,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/63-100.mp3"
+    },
+    {
+     "key": 66,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/66-100.mp3"
+    },
+    {
+     "key": 69,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/69-100.mp3"
+    },
+    {
+     "key": 72,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/72-100.mp3"
+    },
+    {
+     "key": 75,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/75-100.mp3"
+    },
+    {
+     "key": 78,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/78-100.mp3"
+    },
+    {
+     "key": 81,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/81-100.mp3"
+    },
+    {
+     "key": 84,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/84-100.mp3"
+    },
+    {
+     "key": 87,
+     "vel": 100,
+     "file": "assets/instruments/saw-lead/87-100.mp3"
+    }
+   ]
+  },
+  "pad": {
+   "type": "pitched",
+   "preset": 89,
+   "notes": [
+    {
+     "key": 43,
+     "vel": 95,
+     "file": "assets/instruments/pad/43-95.mp3"
+    },
+    {
+     "key": 46,
+     "vel": 95,
+     "file": "assets/instruments/pad/46-95.mp3"
+    },
+    {
+     "key": 49,
+     "vel": 95,
+     "file": "assets/instruments/pad/49-95.mp3"
+    },
+    {
+     "key": 52,
+     "vel": 95,
+     "file": "assets/instruments/pad/52-95.mp3"
+    },
+    {
+     "key": 55,
+     "vel": 95,
+     "file": "assets/instruments/pad/55-95.mp3"
+    },
+    {
+     "key": 58,
+     "vel": 95,
+     "file": "assets/instruments/pad/58-95.mp3"
+    },
+    {
+     "key": 61,
+     "vel": 95,
+     "file": "assets/instruments/pad/61-95.mp3"
+    },
+    {
+     "key": 64,
+     "vel": 95,
+     "file": "assets/instruments/pad/64-95.mp3"
+    },
+    {
+     "key": 67,
+     "vel": 95,
+     "file": "assets/instruments/pad/67-95.mp3"
+    },
+    {
+     "key": 70,
+     "vel": 95,
+     "file": "assets/instruments/pad/70-95.mp3"
+    },
+    {
+     "key": 73,
+     "vel": 95,
+     "file": "assets/instruments/pad/73-95.mp3"
+    },
+    {
+     "key": 76,
+     "vel": 95,
+     "file": "assets/instruments/pad/76-95.mp3"
+    },
+    {
+     "key": 79,
+     "vel": 95,
+     "file": "assets/instruments/pad/79-95.mp3"
+    },
+    {
+     "key": 82,
+     "vel": 95,
+     "file": "assets/instruments/pad/82-95.mp3"
     }
    ]
   },
@@ -665,6 +1035,16 @@
       "file": "assets/instruments/drums-power/rim-118.mp3"
      }
     ],
+    "clap": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-power/clap-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-power/clap-118.mp3"
+     }
+    ],
     "hat": [
      {
       "vel": 70,
@@ -713,6 +1093,16 @@
      {
       "vel": 118,
       "file": "assets/instruments/drums-power/crash2-118.mp3"
+     }
+    ],
+    "china": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-power/china-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-power/china-118.mp3"
      }
     ],
     "ride": [
@@ -801,6 +1191,16 @@
       "file": "assets/instruments/drums-standard/rim-118.mp3"
      }
     ],
+    "clap": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-standard/clap-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-standard/clap-118.mp3"
+     }
+    ],
     "hat": [
      {
       "vel": 70,
@@ -851,6 +1251,16 @@
       "file": "assets/instruments/drums-standard/crash2-118.mp3"
      }
     ],
+    "china": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-standard/china-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-standard/china-118.mp3"
+     }
+    ],
     "ride": [
      {
       "vel": 70,
@@ -899,6 +1309,162 @@
      {
       "vel": 118,
       "file": "assets/instruments/drums-standard/tom4-118.mp3"
+     }
+    ]
+   }
+  },
+  "drums-electronic": {
+   "type": "drums",
+   "preset": 25,
+   "pieces": {
+    "kick": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/kick-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/kick-118.mp3"
+     }
+    ],
+    "snare": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/snare-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/snare-118.mp3"
+     }
+    ],
+    "rim": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/rim-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/rim-118.mp3"
+     }
+    ],
+    "clap": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/clap-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/clap-118.mp3"
+     }
+    ],
+    "hat": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/hat-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/hat-118.mp3"
+     }
+    ],
+    "pedal": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/pedal-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/pedal-118.mp3"
+     }
+    ],
+    "ohat": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/ohat-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/ohat-118.mp3"
+     }
+    ],
+    "crash": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/crash-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/crash-118.mp3"
+     }
+    ],
+    "crash2": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/crash2-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/crash2-118.mp3"
+     }
+    ],
+    "china": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/china-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/china-118.mp3"
+     }
+    ],
+    "ride": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/ride-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/ride-118.mp3"
+     }
+    ],
+    "tom1": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/tom1-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/tom1-118.mp3"
+     }
+    ],
+    "tom2": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/tom2-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/tom2-118.mp3"
+     }
+    ],
+    "tom3": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/tom3-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/tom3-118.mp3"
+     }
+    ],
+    "tom4": [
+     {
+      "vel": 70,
+      "file": "assets/instruments/drums-electronic/tom4-70.mp3"
+     },
+     {
+      "vel": 118,
+      "file": "assets/instruments/drums-electronic/tom4-118.mp3"
      }
     ]
    }

@@ -39,7 +39,7 @@
     <nav class="tabbar" id="tabbar" aria-label="Main">
       <button type="button" data-tab="hq"><span class="icon" style="-webkit-mask-image:url(assets/icons/hq.svg);mask-image:url(assets/icons/hq.svg)"></span>HQ</button>
       <button type="button" data-tab="band"><span class="icon" style="-webkit-mask-image:url(assets/icons/crew.svg);mask-image:url(assets/icons/crew.svg)"></span>Band</button>
-      <button type="button" data-tab="gigs"><span class="icon" style="-webkit-mask-image:url(assets/icons/map.svg);mask-image:url(assets/icons/map.svg)"></span>Gigs</button>
+      <button type="button" data-tab="map"><span class="icon" style="-webkit-mask-image:url(assets/icons/map.svg);mask-image:url(assets/icons/map.svg)"></span>Map</button>
       <button type="button" data-tab="music"><span class="icon" style="-webkit-mask-image:url(assets/icons/record.svg);mask-image:url(assets/icons/record.svg)"></span>Music</button>
       <button type="button" data-tab="shop"><span class="icon" style="-webkit-mask-image:url(assets/icons/shop.svg);mask-image:url(assets/icons/shop.svg)"></span>Shop</button>
     </nav>
@@ -49,6 +49,8 @@
   <div class="stage-layer" id="stage-layer" hidden></div>
 
   <dialog class="sheet" id="member-sheet" aria-labelledby="member-name"></dialog>
+  <dialog class="sheet" id="venue-sheet" aria-labelledby="venue-name"></dialog>
+  <dialog class="sheet" id="band-sheet" aria-labelledby="band-title"></dialog>
   <dialog class="sheet" id="settings-sheet" aria-labelledby="settings-title"></dialog>
   <dialog class="sheet" id="calibrate-sheet" aria-labelledby="calibrate-title"></dialog>
   <dialog class="sheet" id="confirm-sheet" aria-labelledby="confirm-title"></dialog>
@@ -59,6 +61,7 @@
   <script src="js/composer.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/scene.js"></script>
+  <script src="js/director.js"></script>
   <script src="js/rhythm.js"></script>
   <script src="js/main.js"></script>
 </body>

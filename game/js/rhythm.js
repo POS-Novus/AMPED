@@ -16,7 +16,7 @@ window.AmpedRhythm = (() => {
     const diff = R.difficulties[opts.difficulty];
     // Either a recorded cover (opts.track = { meta, buffer }) or a generated arrangement.
     const C = window.AmpedComposer, track = opts.track;
-    const arr = track ? null : C.compose(opts.song);
+    const arr = track ? null : C.compose(opts.song, opts.bandGenre);
     const bpm = track ? track.meta.bpm : arr.bpm;
     const spb = 60 / bpm;
     const footLabel = track
@@ -27,7 +27,7 @@ window.AmpedRhythm = (() => {
 
     host.innerHTML = `
       <div class="rh" role="application" aria-label="Rhythm gig">
-        <div class="rh-stage"></div>
+        <div class="rh-stage"><div class="rh-cam"></div><div class="rh-beams" aria-hidden="true"></div><div class="rh-flash" aria-hidden="true"></div></div>
         <div class="rh-shade"></div>
         <header class="rh-top">
           <button class="icon-btn rh-pause" type="button" aria-label="Pause"><span class="icon" style="-webkit-mask-image:url(assets/icons/pause.svg);mask-image:url(assets/icons/pause.svg)"></span></button>
@@ -55,8 +55,12 @@ window.AmpedRhythm = (() => {
     const notesLayer = $(".rh-notes"), highway = $(".rh-highway"), overlay = $(".rh-overlay");
     const laneEls = [...root.querySelectorAll(".rh-lane")];
 
-    const scene = window.AmpedScene.mount($(".rh-stage"), { scene: opts.scene, members: opts.members, ambience: false });
+    const scene = window.AmpedScene.mount($(".rh-cam"), { scene: opts.scene, members: opts.members, ambience: false });
     scene.setLive(true);
+    const director = window.AmpedDirector.create({
+      stage: $(".rh-stage"), cam: $(".rh-cam"), scene: opts.scene, role: opts.role, genre: arr ? arr.genre : "rock",
+      sections: arr ? arr.sections : [], spb, capacity: opts.capacity, reduced: reduced()
+    });
 
     const chart = track ? C.trackChart(track.meta, opts.role, opts.difficulty) : C.chart(arr, opts.role, opts.difficulty);
     const t0 = A.now() + 0.8;                       // count-in starts here
@@ -107,9 +111,10 @@ window.AmpedRhythm = (() => {
         st.score += R.points[grade] * mult;
         A.sfx.hit(n.lane);
         effect(n.lane, grade);
-        if (st.streak % 10 === 0) scene.cheerAll();
+        if (st.streak % 10 === 0) { scene.cheerAll(); director.flash(0.3); }
       }
-      st.crowd = Math.max(0, Math.min(100, st.crowd + R.crowd[grade]));
+      // bigger venues are less forgiving: misses cost more
+      st.crowd = Math.max(0, Math.min(100, st.crowd + R.crowd[grade] * (grade === "miss" ? opts.tough || 1 : 1)));
       showJudge(grade);
       hud();
       if (st.crowd <= 0) fail();
@@ -166,6 +171,7 @@ window.AmpedRhythm = (() => {
       const songPos = Math.max(0, vis - songStart);
       $("[data-time]").textContent = `${fmt(songPos)} / ${fmt(songEnd - songStart)}`;
       const beatNow = (vis - songStart) / spb;
+      director.update(beatNow);
       const sec = arr && arr.sections.filter((x) => x.beat <= beatNow).pop();
       const secName = beatNow < 0 ? "Count-in" : sec ? sec.name : track ? "Live" : "";
       if (secName !== lastSection) { lastSection = secName; $("[data-section]").textContent = secName; }
@@ -194,6 +200,7 @@ window.AmpedRhythm = (() => {
       if (st.paused || st.over) return;
       st.paused = true;
       A.suspend();
+      director.pause();
       overlay.hidden = false;
       overlay.className = "rh-overlay menu";
       overlay.innerHTML = `
@@ -217,6 +224,7 @@ window.AmpedRhythm = (() => {
         clearInterval(tick);
         overlay.hidden = true; overlay.className = "rh-overlay";
         st.paused = false;
+        director.resume();
         A.resume();
       }, 450);
     }
@@ -292,6 +300,7 @@ window.AmpedRhythm = (() => {
       document.removeEventListener("visibilitychange", onHide);
       window.removeEventListener("blur", onBlur);
       scene.stop();
+      director.stop();
       if (st.paused) A.resume();   // the audio clock is shared with SFX and menus
     }
 
