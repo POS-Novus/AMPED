@@ -25,7 +25,7 @@ The game also pauses when the tab is hidden or the window loses focus.
 | `css/app.css` | All UI styling, built on the kit tokens; DejaVu Sans from the kit |
 | `js/data.js` | Content and tuning: members, scene layouts, venue, songwriting, costs, rhythm settings |
 | `js/composer.js` | Genre presets (metal, rock, punk, pop, indie, electronic) and the groove model the studio edits (tempo, tone, kit, chords, 16-step beat and riff); arranges each song into intro/verse/chorus/outro for five parts; builds charts from the part you play |
-| `js/audio.js` | Web Audio clock, synth band for generated songs, recorded-song playback, menu music loop, metronome, SFX |
+| `js/audio.js` | Web Audio clock, synth band for generated songs, recorded-song playback, metronome, SFX |
 | `assets/instruments/` | Sampled band instruments (drum kits, guitars, bass, piano, organ, voices) rendered by `tools/render_instruments.py` |
 | `assets/music/` | Licensed recordings + auto-charts (none at the moment; pipeline in `tools/prepare_music.py`) |
 | `js/scene.js` | Backdrop + band placement + ambience (rain, light flicker, dust, notes) |
@@ -46,7 +46,6 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 - Songwriting: title, theme, style, hidden combo bonuses, song list with quality and practice level
 - Gig booking at the pub: song, part (each role has its own chart), difficulty, costs, tired-member blocking
 - **Real instruments**: generated songs play on sampled drums, double-tracked distorted guitar, pick bass, piano/organ, a lead voice and backing choir, with timing/velocity humanising and a stereo mix (synth fallback if a sample fails to load)
-- **Menu music**: the band's own instrumental theme, rendered once and looped; starts on the first tap and fades out for gigs
 - Music credits in Settings
 - **Map (Road to Solstice)**: 11 venues from the street corner to the Solstice festival, in acts; each unlocks by fame, wins at earlier venues and songs written; venue sheet with capacity, pay, crowd toughness; bigger venues pay more and punish misses harder
 - **Studio**: pick genre, guitar tone (clean / crunch / distorted / metal / synth), drum kit, tempo, chords and chorus feel; program the beat and the guitar riff on 16-step grids; hear verse/chorus live before recording

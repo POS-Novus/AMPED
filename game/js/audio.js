@@ -465,32 +465,6 @@ window.AmpedAudio = (() => {
     };
   }
 
-  // ---------- menu music: one looping track, faded in and out ----------
-  // source: a URL to a recording, or a function that returns a Promise<AudioBuffer> (e.g. a rendered arrangement)
-  const menu = (() => {
-    let node = null, gain = null, wanted = false, source = null, cached = null;
-    async function play(src) {
-      source = src || source; wanted = true;
-      if (node || !source) return;
-      if (!cached) cached = typeof source === "string" ? load(source) : source();
-      const buf = await cached;
-      if (!wanted || node) return;
-      gain = ctx.createGain(); gain.gain.value = 0; gain.connect(musicBus);
-      node = ctx.createBufferSource(); node.buffer = buf; node.loop = true; node.connect(gain);
-      node.start();
-      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 1.5);
-    }
-    function stop() {
-      wanted = false;
-      if (!node) return;
-      const n = node, g = gain, t = ctx.currentTime;
-      node = gain = null;
-      g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + 0.6);
-      setTimeout(() => { try { n.stop(); } catch { /* ignore */ } g.disconnect(); }, 700);
-    }
-    return { play, stop, resume: () => source && play() };
-  })();
-
   // ---------- metronome for calibration ----------
   function click(t, accent) {
     ensure();
@@ -521,5 +495,5 @@ window.AmpedAudio = (() => {
     boo() { ensure(); tone(ctx.currentTime, 110, "sawtooth", 0.12, 0.9); }
   };
 
-  return { unlock, setVolumes, now, suspend, resume, playArrangement, playLoop, renderOffline, loadInstruments, instrumentsFor, load, playBuffer, menu, click, sfx };
+  return { unlock, setVolumes, now, suspend, resume, playArrangement, playLoop, renderOffline, loadInstruments, instrumentsFor, load, playBuffer, click, sfx };
 })();
