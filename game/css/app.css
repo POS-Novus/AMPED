@@ -466,3 +466,14 @@ body.on-stage { overflow: hidden; }
 .btn-small { min-height: 40px; padding: 6px 12px; font-size: 14px; }
 .preview-bar [data-now] { flex: 1 1 140px; }
 @media (max-width: 599px) { .roll .step-grid { grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 2px; } .roll .step { height: 22px; border-radius: 3px; } }
+
+/* ---------- wardrobe ---------- */
+.ward-cast { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ward-card { border: 1px solid var(--line); background: var(--ink); color: var(--cream); border-radius: 12px; padding: 8px; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.ward-card img { width: 100%; height: 110px; object-fit: contain; object-position: bottom; }
+.ward-card b { font-size: 14px; }
+.ward-card small { font-size: 11px; color: var(--muted); line-height: 1.25; }
+.ward-card.is-sel { border-color: var(--yellow); box-shadow: inset 0 0 0 1px var(--yellow); }
+.ward-card:disabled { opacity: .45; cursor: not-allowed; }
+.ward-preview { flex-shrink: 0; height: min(44dvh, 360px); border-radius: 14px; background: radial-gradient(ellipse at 50% 90%, #2a2f55, #121426 70%); display: flex; justify-content: center; align-items: flex-end; padding: 12px; overflow: hidden; }
+.ward-preview img { height: 100%; width: auto; max-width: 100%; min-height: 0; object-fit: contain; object-position: bottom; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .5)); }

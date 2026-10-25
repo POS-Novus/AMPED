@@ -56,7 +56,24 @@
   let hqScene = null;
 
   const def = (id) => DATA.members.find((m) => m.id === id);
-  const members = () => state.members.map((m) => ({ ...def(m.id), ...m }));
+  // ---------- looks: who plays each role and what they wear (cosmetic only) ----------
+  const familyName = (id) => (DATA.families.find((f) => f.id === id) || {}).name || "";
+  // everyone who could play a role: the role's original member first, then the tribe characters
+  function castFor(role) {
+    const orig = DATA.members.find((m) => m.role === role);
+    const own = { id: orig.id, family: "band", name: orig.name, looks: [{ id: orig.id, outfit: "Original", sprite: orig.sprite, aspect: orig.aspect }, ...(DATA.outfits[orig.id] || [])] };
+    return [own, ...DATA.characters];
+  }
+  function lookOf(m) {
+    const L = m.look || { character: m.id, look: m.id };
+    const c = castFor(m.role).find((x) => x.id === L.character);
+    if (!c) return {};
+    const o = c.looks.find((x) => x.id === L.look) || c.looks[0];
+    const guest = c.id !== m.id;
+    return { name: c.name, sprite: o.sprite, aspect: o.aspect, character: c.id, outfit: o.outfit,
+      ...(guest ? { bio: `${c.name} plays ${m.roleLabel.toLowerCase()} now. ${familyName(c.family)} style, all the way.` } : {}) };
+  }
+  const members = () => state.members.map((m) => { const base = { ...def(m.id), ...m }; return { ...base, ...lookOf(base) }; });
   const member = (id) => members().find((m) => m.id === id);
   const raw = (id) => state.members.find((m) => m.id === id);
   const avg = (key) => state.members.reduce((s, m) => s + m.stats[key], 0) / state.members.length;
@@ -329,7 +346,7 @@
                   ${st.stars ? `<small class="map-stars">${"★".repeat(st.stars)}${"☆".repeat(5 - st.stars)}</small>` : ""}${isNew ? `<small class="map-new">New!</small>` : ""}</span>
               </button>`;
             }).join("")}
-            <img class="map-band" src="${def("nia").sprite}" alt="" style="left:${pos[hereIdx].x}%;top:${pos[hereIdx].y}px">
+            <img class="map-band" src="${member("nia").sprite}" alt="" style="left:${pos[hereIdx].x}%;top:${pos[hereIdx].y}px">
           </div>
         </section>`;
       el.onclick = (e) => {
@@ -808,6 +825,61 @@
     return { render, stop, reset };
   })();
 
+  // ---------- wardrobe: pick who plays a role and their outfit ----------
+  function openWardrobe(id) {
+    const dlg = $("#wardrobe-sheet"), me = member(id);
+    const cast = castFor(me.role);
+    let pickChar = me.character, pickLook = (me.look && me.look.look) || id;
+    let fam = (cast.find((c) => c.id === pickChar) || cast[0]).family;
+    // who else in the band already is this character
+    const takenBy = (charId) => members().find((m) => m.id !== id && m.character === charId);
+    const render = () => {
+      const c = cast.find((x) => x.id === pickChar) || cast[0];
+      const look = c.looks.find((l) => l.id === pickLook) || c.looks[0];
+      const taken = takenBy(c.id);
+      const equipped = me.character === c.id && (me.look ? me.look.look : id) === look.id;
+      const inFam = cast.filter((x) => x.family === fam);
+      dlg.style.setProperty("--c", me.color);
+      dlg.innerHTML = `
+        <div class="sheet-head">
+          <div><span class="eyebrow">Wardrobe · ${me.roleLabel}</span><h2 id="wardrobe-title">Who plays ${me.roleLabel.toLowerCase()}?</h2></div>
+          <button class="icon-btn" type="button" data-close aria-label="Close">${icon("close")}</button>
+        </div>
+        <div class="chips" role="group" aria-label="Style family">${DATA.families.map((f) => `<label class="pick"><input type="radio" name="fam" value="${f.id}" ${f.id === fam ? "checked" : ""}><span>${f.name}</span></label>`).join("")}</div>
+        <div class="ward-cast">${inFam.map((x) => {
+          const t = takenBy(x.id);
+          return `<button type="button" class="ward-card ${x.id === c.id ? "is-sel" : ""}" data-char="${x.id}" ${t ? "disabled" : ""}>
+            <img src="${x.looks[0].sprite}" alt="" loading="lazy"><b>${esc(x.name)}</b>
+            <small>${t ? `In the band on ${t.roleLabel.toLowerCase()}` : me.character === x.id ? "Playing now" : `${x.looks.length} outfits`}</small></button>`;
+        }).join("")}</div>
+        ${fam === "band" ? `<p class="small muted">The original band hold their own instruments, so each stays in their own role.</p>` : `<p class="small muted">Tribe characters can play any role. Their art has no instrument yet.</p>`}
+        <div class="ward-preview"><img src="${look.sprite}" alt="${esc(c.name)} in the ${esc(look.outfit)} outfit"></div>
+        <fieldset class="field"><legend>Outfit</legend><div class="chips">${c.looks.map((l) => `<label class="pick"><input type="radio" name="look" value="${l.id}" ${l.id === look.id ? "checked" : ""}><span>${esc(l.outfit)}</span></label>`).join("")}</div></fieldset>
+        <p class="small muted">Looks are cosmetic: ${esc(me.name)}'s skills, energy and role stay the same.</p>
+        <button class="btn btn-primary" type="button" data-wear ${equipped || taken ? "disabled" : ""}>${equipped ? `${icon("check")}Wearing this now` : taken ? `${esc(c.name)} is already in the band` : `Put ${esc(c.name)} on ${me.roleLabel.toLowerCase()} ${icon("arrow")}`}</button>`;
+    };
+    render();
+    dlg.onchange = (e) => {
+      if (e.target.name === "fam") { fam = e.target.value; const first = cast.find((x) => x.family === fam && !takenBy(x.id)) || cast.find((x) => x.family === fam); pickChar = first.id; pickLook = first.looks[0].id; render(); }
+      if (e.target.name === "look") { pickLook = e.target.value; render(); }
+    };
+    dlg.onclick = (e) => {
+      if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
+      const card = e.target.closest("[data-char]");
+      if (card && !card.disabled) { pickChar = card.dataset.char; const c = cast.find((x) => x.id === pickChar); pickLook = c.looks[0].id; return render(); }
+      const wear = e.target.closest("[data-wear]");
+      if (wear && !wear.disabled) {
+        const c = cast.find((x) => x.id === pickChar), look = c.looks.find((l) => l.id === pickLook) || c.looks[0];
+        if (c.id === id && look.id === id) delete raw(id).look; else raw(id).look = { character: c.id, look: look.id };
+        save();
+        dlg.close();
+        toast(`${c.name} is on ${me.roleLabel.toLowerCase()} in the ${look.outfit.toLowerCase()} outfit.`);
+        go(view);
+      }
+    };
+    dlg.showModal();
+  }
+
   // ---------- venue sheet ----------
   function openVenue(id) {
     const v = venueById(id), dlg = $("#venue-sheet"), open = unlocked(v), st = vstate(id), req = requirements(v);
@@ -852,7 +924,8 @@
           <div><h2 id="member-name">${esc(m.name)}</h2><span class="eyebrow">${m.roleLabel}</span></div>
           <button class="icon-btn" type="button" data-close aria-label="Close">${icon("close")}</button>
         </div>
-        <p class="muted">${m.bio}</p>
+        <p class="muted">${esc(m.bio)}</p>
+        <button class="btn" type="button" data-m="look">${icon("crew")}Change look · <span class="muted">${esc(m.outfit)}</span></button>
         <dl class="stats">${Object.keys(rows).map((k) => `<dt>${labels[k]}</dt><dd><span class="mini-meter"><i style="width:${rows[k]}%"></i></span><b>${rows[k]}</b></dd>`).join("")}</dl>
         <div class="action-row two">
           <button class="btn" type="button" data-m="train" ${canTrain ? "" : "disabled"}>${icon("guitar")}Lesson · €${DATA.costs.train}</button>
@@ -865,6 +938,7 @@
       if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
       const b = e.target.closest("[data-m]");
       if (!b || b.disabled) return;
+      if (b.dataset.m === "look") { dlg.close(); return openWardrobe(id); }
       const m = raw(id);
       if (b.dataset.m === "train") {
         state.res.cash -= DATA.costs.train;

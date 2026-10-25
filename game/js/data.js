@@ -45,6 +45,30 @@ window.AMPED_DATA = {
       bio: "Quiet studio genius. Already producing the demo." }
   ],
 
+  // Wardrobe: every person you can put in the band, and their outfits. Looks are cosmetic only.
+  // The five originals hold their own instrument, so they stay in their own role; tribe characters
+  // (cut from the tribe concept sheets by tools/prepare_characters.py) can take any role.
+  families: [{ id: "band", name: "The band" }, { id: "headbangers", name: "Headbangers" }, { id: "punks", name: "Punks" }, { id: "hippies", name: "Hippies" }, { id: "kpop", name: "K-pop" }, { id: "trappers", name: "Trappers" }],
+  characters: [
+    { id: "headbangers_a", family: "headbangers", name: "Dario", looks: [{ id: "headbangers_a_base", outfit: "Base", sprite: "assets/characters/looks/headbangers_a_base.webp", aspect: 0.5211 }, { id: "headbangers_a_stage", outfit: "Stage", sprite: "assets/characters/looks/headbangers_a_stage.webp", aspect: 0.5367 }] },
+    { id: "headbangers_b", family: "headbangers", name: "Maeve", looks: [{ id: "headbangers_b_base", outfit: "Base", sprite: "assets/characters/looks/headbangers_b_base.webp", aspect: 0.5333 }, { id: "headbangers_b_stage", outfit: "Stage", sprite: "assets/characters/looks/headbangers_b_stage.webp", aspect: 0.5356 }] },
+    { id: "headbangers_c", family: "headbangers", name: "Tash", looks: [{ id: "headbangers_c_base", outfit: "Base", sprite: "assets/characters/looks/headbangers_c_base.webp", aspect: 0.5711 }, { id: "headbangers_c_stage", outfit: "Stage", sprite: "assets/characters/looks/headbangers_c_stage.webp", aspect: 0.6578 }] },
+    { id: "punks_a", family: "punks", name: "Jinx", looks: [{ id: "punks_a_base", outfit: "Base", sprite: "assets/characters/looks/punks_a_base.webp", aspect: 0.4578 }, { id: "punks_a_stage", outfit: "Stage", sprite: "assets/characters/looks/punks_a_stage.webp", aspect: 0.4744 }] },
+    { id: "punks_b", family: "punks", name: "Bram", looks: [{ id: "punks_b_base", outfit: "Base", sprite: "assets/characters/looks/punks_b_base.webp", aspect: 0.54 }, { id: "punks_b_stage", outfit: "Stage", sprite: "assets/characters/looks/punks_b_stage.webp", aspect: 0.5456 }] },
+    { id: "punks_c", family: "punks", name: "Remi", looks: [{ id: "punks_c_base", outfit: "Base", sprite: "assets/characters/looks/punks_c_base.webp", aspect: 0.46 }, { id: "punks_c_stage", outfit: "Stage", sprite: "assets/characters/looks/punks_c_stage.webp", aspect: 0.45 }] },
+    { id: "hippies_a", family: "hippies", name: "Sol", looks: [{ id: "hippies_a_base", outfit: "Base", sprite: "assets/characters/looks/hippies_a_base.webp", aspect: 0.4556 }, { id: "hippies_a_stage", outfit: "Stage", sprite: "assets/characters/looks/hippies_a_stage.webp", aspect: 0.4678 }] },
+    { id: "hippies_b", family: "hippies", name: "Fern", looks: [{ id: "hippies_b_base", outfit: "Base", sprite: "assets/characters/looks/hippies_b_base.webp", aspect: 0.5356 }, { id: "hippies_b_stage", outfit: "Stage", sprite: "assets/characters/looks/hippies_b_stage.webp", aspect: 0.5367 }] },
+    { id: "hippies_c", family: "hippies", name: "Ayo", looks: [{ id: "hippies_c_base", outfit: "Base", sprite: "assets/characters/looks/hippies_c_base.webp", aspect: 0.4489 }, { id: "hippies_c_stage", outfit: "Stage", sprite: "assets/characters/looks/hippies_c_stage.webp", aspect: 0.4744 }] },
+    { id: "kpop_a", family: "kpop", name: "Jae", looks: [{ id: "kpop_a_base", outfit: "Base", sprite: "assets/characters/looks/kpop_a_base.webp", aspect: 0.4511 }, { id: "kpop_a_stage", outfit: "Stage", sprite: "assets/characters/looks/kpop_a_stage.webp", aspect: 0.4633 }] },
+    { id: "kpop_b", family: "kpop", name: "Imani", looks: [{ id: "kpop_b_base", outfit: "Base", sprite: "assets/characters/looks/kpop_b_base.webp", aspect: 0.5878 }, { id: "kpop_b_stage", outfit: "Stage", sprite: "assets/characters/looks/kpop_b_stage.webp", aspect: 0.5944 }] },
+    { id: "kpop_c", family: "kpop", name: "Haru", looks: [{ id: "kpop_c_base", outfit: "Base", sprite: "assets/characters/looks/kpop_c_base.webp", aspect: 0.52 }, { id: "kpop_c_stage", outfit: "Stage", sprite: "assets/characters/looks/kpop_c_stage.webp", aspect: 0.5222 }] },
+    { id: "trappers_a", family: "trappers", name: "Dre", looks: [{ id: "trappers_a_base", outfit: "Base", sprite: "assets/characters/looks/trappers_a_base.webp", aspect: 0.5167 }, { id: "trappers_a_stage", outfit: "Stage", sprite: "assets/characters/looks/trappers_a_stage.webp", aspect: 0.5711 }] },
+    { id: "trappers_b", family: "trappers", name: "Sky", looks: [{ id: "trappers_b_base", outfit: "Base", sprite: "assets/characters/looks/trappers_b_base.webp", aspect: 0.5656 }, { id: "trappers_b_stage", outfit: "Stage", sprite: "assets/characters/looks/trappers_b_stage.webp", aspect: 0.5656 }] },
+    { id: "trappers_c", family: "trappers", name: "Nova", looks: [{ id: "trappers_c_base", outfit: "Base", sprite: "assets/characters/looks/trappers_c_base.webp", aspect: 0.4833 }, { id: "trappers_c_stage", outfit: "Stage", sprite: "assets/characters/looks/trappers_c_stage.webp", aspect: 0.5756 }] },
+  ],
+  // extra outfits for the original band (Nia's genre wardrobe)
+  outfits: { nia: [{ id: "nia-rock", outfit: "Rock", sprite: "assets/characters/looks/nia-rock.webp", aspect: 0.7333 }, { id: "nia-punk", outfit: "Punk", sprite: "assets/characters/looks/nia-punk.webp", aspect: 0.7222 }, { id: "nia-indie", outfit: "Indie", sprite: "assets/characters/looks/nia-indie.webp", aspect: 0.73 }, { id: "nia-metal", outfit: "Metal", sprite: "assets/characters/looks/nia-metal.webp", aspect: 0.7356 }, { id: "nia-pop", outfit: "Pop", sprite: "assets/characters/looks/nia-pop.webp", aspect: 0.7256 }, { id: "nia-electronic", outfit: "Electronic", sprite: "assets/characters/looks/nia-electronic.webp", aspect: 0.7289 }] },
+
   statLabels: { skill: "Skill", presence: "Stage presence", creativity: "Creativity", ego: "Ego", stamina: "Stamina" },
 
   scenes: {

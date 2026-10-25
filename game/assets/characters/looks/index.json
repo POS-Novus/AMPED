@@ -1,0 +1,727 @@
+{
+ "source": "design/kit (AMPED design kit v1)",
+ "script": "tools/prepare_characters.py",
+ "height": 900,
+ "looks": [
+  {
+   "id": "headbangers_a_base",
+   "character": "headbangers_a",
+   "family": "headbangers",
+   "outfit": "base",
+   "path": "assets/characters/looks/headbangers_a_base.webp",
+   "from": "assets/characters/tribes/tribe-headbangers.png",
+   "cropBounds": [
+    171,
+    11,
+    432,
+    512
+   ],
+   "size": [
+    469,
+    900
+   ],
+   "aspect": 0.5211,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "headbangers_b_base",
+   "character": "headbangers_b",
+   "family": "headbangers",
+   "outfit": "base",
+   "path": "assets/characters/looks/headbangers_b_base.webp",
+   "from": "assets/characters/tribes/tribe-headbangers.png",
+   "cropBounds": [
+    641,
+    26,
+    901,
+    513
+   ],
+   "size": [
+    480,
+    900
+   ],
+   "aspect": 0.5333,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "headbangers_c_base",
+   "character": "headbangers_c",
+   "family": "headbangers",
+   "outfit": "base",
+   "path": "assets/characters/looks/headbangers_c_base.webp",
+   "from": "assets/characters/tribes/tribe-headbangers.png",
+   "cropBounds": [
+    1097,
+    13,
+    1383,
+    514
+   ],
+   "size": [
+    514,
+    900
+   ],
+   "aspect": 0.5711,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "headbangers_a_stage",
+   "character": "headbangers_a",
+   "family": "headbangers",
+   "outfit": "stage",
+   "path": "assets/characters/looks/headbangers_a_stage.webp",
+   "from": "assets/characters/tribes/tribe-headbangers.png",
+   "cropBounds": [
+    166,
+    511,
+    434,
+    1010
+   ],
+   "size": [
+    483,
+    900
+   ],
+   "aspect": 0.5367,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "headbangers_b_stage",
+   "character": "headbangers_b",
+   "family": "headbangers",
+   "outfit": "stage",
+   "path": "assets/characters/looks/headbangers_b_stage.webp",
+   "from": "assets/characters/tribes/tribe-headbangers.png",
+   "cropBounds": [
+    640,
+    523,
+    901,
+    1010
+   ],
+   "size": [
+    482,
+    900
+   ],
+   "aspect": 0.5356,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "headbangers_c_stage",
+   "character": "headbangers_c",
+   "family": "headbangers",
+   "outfit": "stage",
+   "path": "assets/characters/looks/headbangers_c_stage.webp",
+   "from": "assets/characters/tribes/tribe-headbangers.png",
+   "cropBounds": [
+    1068,
+    514,
+    1394,
+    1010
+   ],
+   "size": [
+    592,
+    900
+   ],
+   "aspect": 0.6578,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "punks_a_base",
+   "character": "punks_a",
+   "family": "punks",
+   "outfit": "base",
+   "path": "assets/characters/looks/punks_a_base.webp",
+   "from": "assets/characters/tribes/tribe-punks.png",
+   "cropBounds": [
+    257,
+    3,
+    487,
+    506
+   ],
+   "size": [
+    412,
+    900
+   ],
+   "aspect": 0.4578,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "punks_b_base",
+   "character": "punks_b",
+   "family": "punks",
+   "outfit": "base",
+   "path": "assets/characters/looks/punks_b_base.webp",
+   "from": "assets/characters/tribes/tribe-punks.png",
+   "cropBounds": [
+    633,
+    13,
+    899,
+    506
+   ],
+   "size": [
+    486,
+    900
+   ],
+   "aspect": 0.54,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "punks_c_base",
+   "character": "punks_c",
+   "family": "punks",
+   "outfit": "base",
+   "path": "assets/characters/looks/punks_c_base.webp",
+   "from": "assets/characters/tribes/tribe-punks.png",
+   "cropBounds": [
+    1048,
+    16,
+    1275,
+    509
+   ],
+   "size": [
+    414,
+    900
+   ],
+   "aspect": 0.46,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "punks_a_stage",
+   "character": "punks_a",
+   "family": "punks",
+   "outfit": "stage",
+   "path": "assets/characters/looks/punks_a_stage.webp",
+   "from": "assets/characters/tribes/tribe-punks.png",
+   "cropBounds": [
+    250,
+    509,
+    489,
+    1013
+   ],
+   "size": [
+    427,
+    900
+   ],
+   "aspect": 0.4744,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "punks_b_stage",
+   "character": "punks_b",
+   "family": "punks",
+   "outfit": "stage",
+   "path": "assets/characters/looks/punks_b_stage.webp",
+   "from": "assets/characters/tribes/tribe-punks.png",
+   "cropBounds": [
+    630,
+    518,
+    899,
+    1011
+   ],
+   "size": [
+    491,
+    900
+   ],
+   "aspect": 0.5456,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "punks_c_stage",
+   "character": "punks_c",
+   "family": "punks",
+   "outfit": "stage",
+   "path": "assets/characters/looks/punks_c_stage.webp",
+   "from": "assets/characters/tribes/tribe-punks.png",
+   "cropBounds": [
+    1059,
+    522,
+    1280,
+    1013
+   ],
+   "size": [
+    405,
+    900
+   ],
+   "aspect": 0.45,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "hippies_a_base",
+   "character": "hippies_a",
+   "family": "hippies",
+   "outfit": "base",
+   "path": "assets/characters/looks/hippies_a_base.webp",
+   "from": "assets/characters/tribes/tribe-hippies.png",
+   "cropBounds": [
+    196,
+    4,
+    422,
+    500
+   ],
+   "size": [
+    410,
+    900
+   ],
+   "aspect": 0.4556,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "hippies_b_base",
+   "character": "hippies_b",
+   "family": "hippies",
+   "outfit": "base",
+   "path": "assets/characters/looks/hippies_b_base.webp",
+   "from": "assets/characters/tribes/tribe-hippies.png",
+   "cropBounds": [
+    636,
+    21,
+    893,
+    501
+   ],
+   "size": [
+    482,
+    900
+   ],
+   "aspect": 0.5356,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "hippies_c_base",
+   "character": "hippies_c",
+   "family": "hippies",
+   "outfit": "base",
+   "path": "assets/characters/looks/hippies_c_base.webp",
+   "from": "assets/characters/tribes/tribe-hippies.png",
+   "cropBounds": [
+    1118,
+    4,
+    1340,
+    499
+   ],
+   "size": [
+    404,
+    900
+   ],
+   "aspect": 0.4489,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "hippies_a_stage",
+   "character": "hippies_a",
+   "family": "hippies",
+   "outfit": "stage",
+   "path": "assets/characters/looks/hippies_a_stage.webp",
+   "from": "assets/characters/tribes/tribe-hippies.png",
+   "cropBounds": [
+    192,
+    500,
+    431,
+    1011
+   ],
+   "size": [
+    421,
+    900
+   ],
+   "aspect": 0.4678,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "hippies_b_stage",
+   "character": "hippies_b",
+   "family": "hippies",
+   "outfit": "stage",
+   "path": "assets/characters/looks/hippies_b_stage.webp",
+   "from": "assets/characters/tribes/tribe-hippies.png",
+   "cropBounds": [
+    632,
+    516,
+    896,
+    1008
+   ],
+   "size": [
+    483,
+    900
+   ],
+   "aspect": 0.5367,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "hippies_c_stage",
+   "character": "hippies_c",
+   "family": "hippies",
+   "outfit": "stage",
+   "path": "assets/characters/looks/hippies_c_stage.webp",
+   "from": "assets/characters/tribes/tribe-hippies.png",
+   "cropBounds": [
+    1116,
+    501,
+    1356,
+    1007
+   ],
+   "size": [
+    427,
+    900
+   ],
+   "aspect": 0.4744,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "kpop_a_base",
+   "character": "kpop_a",
+   "family": "kpop",
+   "outfit": "base",
+   "path": "assets/characters/looks/kpop_a_base.webp",
+   "from": "assets/characters/tribes/tribe-kpop.png",
+   "cropBounds": [
+    194,
+    8,
+    415,
+    498
+   ],
+   "size": [
+    406,
+    900
+   ],
+   "aspect": 0.4511,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "kpop_b_base",
+   "character": "kpop_b",
+   "family": "kpop",
+   "outfit": "base",
+   "path": "assets/characters/looks/kpop_b_base.webp",
+   "from": "assets/characters/tribes/tribe-kpop.png",
+   "cropBounds": [
+    636,
+    8,
+    921,
+    493
+   ],
+   "size": [
+    529,
+    900
+   ],
+   "aspect": 0.5878,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "kpop_c_base",
+   "character": "kpop_c",
+   "family": "kpop",
+   "outfit": "base",
+   "path": "assets/characters/looks/kpop_c_base.webp",
+   "from": "assets/characters/tribes/tribe-kpop.png",
+   "cropBounds": [
+    1105,
+    10,
+    1358,
+    497
+   ],
+   "size": [
+    468,
+    900
+   ],
+   "aspect": 0.52,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "kpop_a_stage",
+   "character": "kpop_a",
+   "family": "kpop",
+   "outfit": "stage",
+   "path": "assets/characters/looks/kpop_a_stage.webp",
+   "from": "assets/characters/tribes/tribe-kpop.png",
+   "cropBounds": [
+    183,
+    501,
+    420,
+    1013
+   ],
+   "size": [
+    417,
+    900
+   ],
+   "aspect": 0.4633,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "kpop_b_stage",
+   "character": "kpop_b",
+   "family": "kpop",
+   "outfit": "stage",
+   "path": "assets/characters/looks/kpop_b_stage.webp",
+   "from": "assets/characters/tribes/tribe-kpop.png",
+   "cropBounds": [
+    633,
+    501,
+    935,
+    1009
+   ],
+   "size": [
+    535,
+    900
+   ],
+   "aspect": 0.5944,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "kpop_c_stage",
+   "character": "kpop_c",
+   "family": "kpop",
+   "outfit": "stage",
+   "path": "assets/characters/looks/kpop_c_stage.webp",
+   "from": "assets/characters/tribes/tribe-kpop.png",
+   "cropBounds": [
+    1105,
+    502,
+    1371,
+    1011
+   ],
+   "size": [
+    470,
+    900
+   ],
+   "aspect": 0.5222,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "trappers_a_base",
+   "character": "trappers_a",
+   "family": "trappers",
+   "outfit": "base",
+   "path": "assets/characters/looks/trappers_a_base.webp",
+   "from": "assets/characters/tribes/tribe-trappers.png",
+   "cropBounds": [
+    228,
+    6,
+    486,
+    505
+   ],
+   "size": [
+    465,
+    900
+   ],
+   "aspect": 0.5167,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "trappers_b_base",
+   "character": "trappers_b",
+   "family": "trappers",
+   "outfit": "base",
+   "path": "assets/characters/looks/trappers_b_base.webp",
+   "from": "assets/characters/tribes/tribe-trappers.png",
+   "cropBounds": [
+    624,
+    10,
+    904,
+    505
+   ],
+   "size": [
+    509,
+    900
+   ],
+   "aspect": 0.5656,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "trappers_c_base",
+   "character": "trappers_c",
+   "family": "trappers",
+   "outfit": "base",
+   "path": "assets/characters/looks/trappers_c_base.webp",
+   "from": "assets/characters/tribes/tribe-trappers.png",
+   "cropBounds": [
+    1061,
+    16,
+    1298,
+    506
+   ],
+   "size": [
+    435,
+    900
+   ],
+   "aspect": 0.4833,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "trappers_a_stage",
+   "character": "trappers_a",
+   "family": "trappers",
+   "outfit": "stage",
+   "path": "assets/characters/looks/trappers_a_stage.webp",
+   "from": "assets/characters/tribes/tribe-trappers.png",
+   "cropBounds": [
+    202,
+    506,
+    491,
+    1012
+   ],
+   "size": [
+    514,
+    900
+   ],
+   "aspect": 0.5711,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "trappers_b_stage",
+   "character": "trappers_b",
+   "family": "trappers",
+   "outfit": "stage",
+   "path": "assets/characters/looks/trappers_b_stage.webp",
+   "from": "assets/characters/tribes/tribe-trappers.png",
+   "cropBounds": [
+    623,
+    509,
+    907,
+    1011
+   ],
+   "size": [
+    509,
+    900
+   ],
+   "aspect": 0.5656,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "trappers_c_stage",
+   "character": "trappers_c",
+   "family": "trappers",
+   "outfit": "stage",
+   "path": "assets/characters/looks/trappers_c_stage.webp",
+   "from": "assets/characters/tribes/tribe-trappers.png",
+   "cropBounds": [
+    1051,
+    516,
+    1337,
+    1013
+   ],
+   "size": [
+    518,
+    900
+   ],
+   "aspect": 0.5756,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "nia-rock",
+   "character": "nia",
+   "family": "wardrobe",
+   "outfit": "rock",
+   "path": "assets/characters/looks/nia-rock.webp",
+   "from": "assets/characters/genre-wardrobe.png",
+   "cropBounds": [
+    123,
+    11,
+    481,
+    499
+   ],
+   "size": [
+    660,
+    900
+   ],
+   "aspect": 0.7333,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "nia-punk",
+   "character": "nia",
+   "family": "wardrobe",
+   "outfit": "punk",
+   "path": "assets/characters/looks/nia-punk.webp",
+   "from": "assets/characters/genre-wardrobe.png",
+   "cropBounds": [
+    603,
+    10,
+    956,
+    499
+   ],
+   "size": [
+    650,
+    900
+   ],
+   "aspect": 0.7222,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "nia-indie",
+   "character": "nia",
+   "family": "wardrobe",
+   "outfit": "indie",
+   "path": "assets/characters/looks/nia-indie.webp",
+   "from": "assets/characters/genre-wardrobe.png",
+   "cropBounds": [
+    1082,
+    10,
+    1437,
+    496
+   ],
+   "size": [
+    657,
+    900
+   ],
+   "aspect": 0.73,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "nia-metal",
+   "character": "nia",
+   "family": "wardrobe",
+   "outfit": "metal",
+   "path": "assets/characters/looks/nia-metal.webp",
+   "from": "assets/characters/genre-wardrobe.png",
+   "cropBounds": [
+    111,
+    503,
+    482,
+    1007
+   ],
+   "size": [
+    662,
+    900
+   ],
+   "aspect": 0.7356,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "nia-pop",
+   "character": "nia",
+   "family": "wardrobe",
+   "outfit": "pop",
+   "path": "assets/characters/looks/nia-pop.webp",
+   "from": "assets/characters/genre-wardrobe.png",
+   "cropBounds": [
+    592,
+    504,
+    957,
+    1007
+   ],
+   "size": [
+    653,
+    900
+   ],
+   "aspect": 0.7256,
+   "pivot": "bottom-centre (feet)"
+  },
+  {
+   "id": "nia-electronic",
+   "character": "nia",
+   "family": "wardrobe",
+   "outfit": "electronic",
+   "path": "assets/characters/looks/nia-electronic.webp",
+   "from": "assets/characters/genre-wardrobe.png",
+   "cropBounds": [
+    1069,
+    503,
+    1437,
+    1008
+   ],
+   "size": [
+    656,
+    900
+   ],
+   "aspect": 0.7289,
+   "pivot": "bottom-centre (feet)"
+  }
+ ]
+}
