@@ -1,7 +1,8 @@
-// Turns a song into an arrangement the band plays. Every song is driven by a "groove":
-// genre, tempo, guitar tone, drum kit, chord progression, a one-bar drum beat and a one-bar
-// guitar riff (16 sixteenth-note steps each). Songs written in the studio store their groove;
-// older/generated songs get one from their genre's presets, seeded by the song so it never changes.
+// Turns a song into an arrangement the band plays. A song is a list of sections (Intro, Verse,
+// Chorus, ...), each with a chord progression and one clip per track: drums, guitar, bass, vocals.
+// Clips are one-bar patterns of 16 sixteenth-note steps (vocals: two bars, 32 steps), picked from
+// sample libraries in the studio or edited step by step. Keys follow the chords automatically.
+// Older songs (a single "groove", or none) are converted on the fly, seeded so they never change.
 // Charts are then cut from the notes of the part you play.
 window.AmpedComposer = (() => {
   function seeded(str) {
@@ -10,266 +11,386 @@ window.AmpedComposer = (() => {
     return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
   }
   const pick = (rnd, list) => list[Math.floor(rnd() * list.length)];
+  const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
   const SCALES = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10], mixo: [0, 2, 4, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10] };
+  const TRACKS = ["drums", "guitar", "bass", "vocals"];
+  const SECTION_TYPES = ["Intro", "Verse", "Pre-chorus", "Chorus", "Bridge", "Solo", "Breakdown", "Outro"];
+  const DRUM_ROWS = ["kick", "snare", "hat", "crash"];
 
-  // Patterns: drums "." off, "x" hit, "X" accent (on hi-hat: open). Riff steps:
-  // "." rest, "m" palm-muted chug, "P" power chord, "H" high note, "L" lead lick note, "A" arpeggio note.
+  // Pattern alphabets
+  //   drums  (per row): "." off, "x" hit, "X" accent (hi-hat: open), "o" ghost (soft)
+  //   guitar: "." rest, "m" palm-muted chug, "P" power chord, "H" high note, "L" lead lick, "A" arpeggio
+  //   bass:   "." rest, "r" root, "f" fifth, "o" octave, "m" short muted root; or "follow" (copies the guitar's rhythm)
+  //   vocals: 32 steps; "1"-"8" a note that many scale steps above the chord root (8 = octave), "." hold, "_" silence
   const GENRES = {
     metal: {
       label: "Metal", blurb: "Low tuning, galloping chugs, double-kick choruses.", bpm: 168, tone: "metal", kit: "power", keys: "pad", root: 38,
-      progs: [{ name: "Phrygian doom (i–♭II–i–i)", deg: [0, 1, 0, 0], mode: "phrygian" }, { name: "Epic (i–♭VI–♭VII–i)", deg: [0, 5, 6, 0], mode: "minor" }, { name: "Grind (i–i–♭VI–♭VII)", deg: [0, 0, 5, 6], mode: "minor" }],
-      beats: {
+      progs: [{ name: "Phrygian doom (i–♭II–i–i)", mood: "Dark and doomy", deg: [0, 1, 0, 0], mode: "phrygian" }, { name: "Epic (i–♭VI–♭VII–i)", mood: "Epic", deg: [0, 5, 6, 0], mode: "minor" }, { name: "Grind (i–i–♭VI–♭VII)", mood: "Grinding", deg: [0, 0, 5, 6], mode: "minor" }],
+      drums: {
         "Gallop": { kick: "x.xxx.xxx.xxx.xx", snare: "....X.......X...", hat: "x...x...x...x...", crash: "x..............." },
         "Thrash": { kick: "x.x.x.x.x.x.x.x.", snare: "..X...X...X...X.", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
-        "Double kick": { kick: "xxxxxxxxxxxxxxxx", snare: "....X.......X...", hat: "x...x...x...x...", crash: "x...x...x...x..." },
-        "Breakdown": { kick: "x..x..x...x..x..", snare: "........X.......", hat: "X.......X.......", crash: "x..............." }
+        "Double kick": { kick: "xxxxxxxxxxxxxxxx", snare: "....X.......X...", hat: "................", crash: "x...x...x...x..." },
+        "Breakdown": { kick: "x..x..x...x..x..", snare: "........X.......", hat: "X.......X.......", crash: "x..............." },
+        "Blast beat": { kick: "x.x.x.x.x.x.x.x.", snare: ".x.x.x.x.x.x.x.x", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." }
       },
-      riffs: { "Gallop chug": "m.mmm.mmm.mmP.P.", "Chug & stab": "mmmmP...mmmmH...", "Tremolo lead": "LLLLLLLLLLLLLLLL", "Djent stop": "P..m.mP..m.mP.m." },
-      chorus: "double", chorusRiff: "P.......P...P.P.", density: { verse: [0.6, 0.3], chorus: [0.75, 0.2] }
+      guitar: { "Gallop chug": "m.mmm.mmm.mmP.P.", "Chug & stab": "mmmmP...mmmmH...", "Tremolo lead": "LLLLLLLLLLLLLLLL", "Djent stop": "P..m.mP..m.mP.m.", "Big chords": "P.......P...P.P." },
+      bass: {},
+      def: { verse: ["Gallop", "Gallop chug", "Follow guitar", "Low drone"], chorus: ["Double kick", "Big chords", "Follow guitar", "Soaring"] }
     },
     rock: {
       label: "Rock", blurb: "Crunchy power chords, big backbeat, singalong choruses.", bpm: 128, tone: "crunch", kit: "power", keys: "organ", root: 40,
-      progs: [{ name: "Classic (I–♭VII–IV–I)", deg: [0, 6, 3, 0], mode: "mixo" }, { name: "Drive (I–IV–V–IV)", deg: [0, 3, 4, 3], mode: "major" }, { name: "Dark (i–♭VI–♭VII–i)", deg: [0, 5, 6, 0], mode: "minor" }],
-      beats: {
+      progs: [{ name: "Classic (I–♭VII–IV–I)", mood: "Classic rock", deg: [0, 6, 3, 0], mode: "mixo" }, { name: "Drive (I–IV–V–IV)", mood: "Driving", deg: [0, 3, 4, 3], mode: "major" }, { name: "Dark (i–♭VI–♭VII–i)", mood: "Dark", deg: [0, 5, 6, 0], mode: "minor" }],
+      drums: {
         "Rock beat": { kick: "x.....x.x.......", snare: "....X.......X...", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
         "Driving 8ths": { kick: "x.x...x.x.x...x.", snare: "....X.......X...", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
+        "Open hats": { kick: "x.....x.x.......", snare: "....X.......X...", hat: "x.X.x.X.x.X.x.X.", crash: "x..............." },
         "Half-time": { kick: "x.........x.....", snare: "........X.......", hat: "x...x...x...x...", crash: "x..............." }
       },
-      riffs: { "Power stabs": "P..P..P.P..P..P.", "Chug & chord": "P.mmP.mmH.mmP.mm", "Riff lick": "P...P.LLP...H.L.", "Open strum": "P.......P.....P." },
-      chorus: "open", chorusRiff: "P.......P.....P.", density: { verse: [0.75, 0.4], chorus: [0.85, 0.25] }
+      guitar: { "Power stabs": "P..P..P.P..P..P.", "Chug & chord": "P.mmP.mmH.mmP.mm", "Riff lick": "P...P.LLP...H.L.", "Open strum": "P.......P.....P." },
+      bass: {},
+      def: { verse: ["Rock beat", "Chug & chord", "Follow guitar", "Steady"], chorus: ["Open hats", "Open strum", "Root 8ths", "Hook"] }
     },
     punk: {
       label: "Punk", blurb: "Fast down-strummed chords, no brakes.", bpm: 186, tone: "dist", kit: "standard", keys: null, root: 40,
-      progs: [{ name: "Three chords (I–IV–V–IV)", deg: [0, 3, 4, 3], mode: "major" }, { name: "Pop-punk (I–V–vi–IV)", deg: [0, 4, 5, 3], mode: "major" }, { name: "Street (i–♭VII–♭VI–♭VII)", deg: [0, 6, 5, 6], mode: "minor" }],
-      beats: {
+      progs: [{ name: "Three chords (I–IV–V–IV)", mood: "Three chords", deg: [0, 3, 4, 3], mode: "major" }, { name: "Pop-punk (I–V–vi–IV)", mood: "Pop-punk", deg: [0, 4, 5, 3], mode: "major" }, { name: "Street (i–♭VII–♭VI–♭VII)", mood: "Street", deg: [0, 6, 5, 6], mode: "minor" }],
+      drums: {
         "Skate punk": { kick: "x...x...x...x...", snare: "..X...X...X...X.", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
-        "Punk rock": { kick: "x.x...x.x.x...x.", snare: "....X.......X...", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." }
+        "Punk rock": { kick: "x.x...x.x.x...x.", snare: "....X.......X...", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
+        "Crash ride": { kick: "x...x...x...x...", snare: "..X...X...X...X.", hat: "................", crash: "x.x.x.x.x.x.x.x." }
       },
-      riffs: { "Downstrokes": "P.P.P.P.P.P.P.P.", "Stop-start": "P.P.P...P.P.P...", "Octaves": "P.P.P.P.H.H.H.H." },
-      chorus: "open", chorusRiff: "P.P.P.P.P.P.P.P.", density: { verse: [0.9, 0.55], chorus: [0.9, 0.35] }
+      guitar: { "Downstrokes": "P.P.P.P.P.P.P.P.", "Stop-start": "P.P.P...P.P.P...", "Octaves": "P.P.P.P.H.H.H.H." },
+      bass: {},
+      def: { verse: ["Punk rock", "Stop-start", "Root 8ths", "Chant"], chorus: ["Skate punk", "Downstrokes", "Root 8ths", "Hook"] }
     },
     pop: {
       label: "Pop", blurb: "Clean guitar, piano chords, a hook you can't shake.", bpm: 112, tone: "clean", kit: "standard", keys: "piano", root: 43,
-      progs: [{ name: "Hit maker (I–V–vi–IV)", deg: [0, 4, 5, 3], mode: "major" }, { name: "Sad pop (vi–IV–I–V)", deg: [5, 3, 0, 4], mode: "major" }, { name: "Uplift (IV–I–V–vi)", deg: [3, 0, 4, 5], mode: "major" }],
-      beats: {
+      progs: [{ name: "Hit maker (I–V–vi–IV)", mood: "Happy", deg: [0, 4, 5, 3], mode: "major" }, { name: "Sad pop (vi–IV–I–V)", mood: "Bittersweet", deg: [5, 3, 0, 4], mode: "major" }, { name: "Uplift (IV–I–V–vi)", mood: "Uplifting", deg: [3, 0, 4, 5], mode: "major" }],
+      drums: {
         "Pop groove": { kick: "x.......x.x.....", snare: "....X.......X...", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
-        "Four on the floor": { kick: "x...x...x...x...", snare: "....X.......X...", hat: "..X...X...X...X.", crash: "x..............." }
+        "Four on the floor": { kick: "X...X...X...X...", snare: "....X.......X...", hat: "..X...X...X...X.", crash: "x..............." }
       },
-      riffs: { "Muted strum": "m.m.m.m.m.m.m.m.", "Chord hits": "P...P...P.P.P...", "Arpeggio": "A.A.A.A.A.A.A.A." },
-      chorus: "four", chorusRiff: "P...P...P.P.P...", density: { verse: [0.75, 0.35], chorus: [0.85, 0.15] }
+      guitar: { "Muted strum": "m.m.m.m.m.m.m.m.", "Chord hits": "P...P...P.P.P...", "Arpeggio": "A.A.A.A.A.A.A.A." },
+      bass: { "Pop bounce": "r..r..r.r..r..r." },
+      def: { verse: ["Pop groove", "Muted strum", "Pop bounce", "Call & answer"], chorus: ["Four on the floor", "Chord hits", "Pop bounce", "Hook"] }
     },
     indie: {
       label: "Indie", blurb: "Jangly arpeggios, a steady motorik beat.", bpm: 124, tone: "clean", kit: "standard", keys: "organ", root: 40,
-      progs: [{ name: "Jangle (I–vi–IV–V)", deg: [0, 5, 3, 4], mode: "major" }, { name: "Moody (i–♭VI–♭III–♭VII)", deg: [0, 5, 2, 6], mode: "minor" }],
-      beats: {
+      progs: [{ name: "Jangle (I–vi–IV–V)", mood: "Jangly", deg: [0, 5, 3, 4], mode: "major" }, { name: "Moody (i–♭VI–♭III–♭VII)", mood: "Moody", deg: [0, 5, 2, 6], mode: "minor" }],
+      drums: {
         "Motorik": { kick: "x...x...x...x...", snare: "....X.......X...", hat: "xxxxxxxxxxxxxxxx", crash: "x..............." },
-        "Dance-punk": { kick: "x...x...x...x...", snare: "....X.......X...", hat: "..X...X...X...X.", crash: "x..............." }
+        "Dance-punk": { kick: "x...x...x...x...", snare: "....X.......X...", hat: "..X...X...X...X.", crash: "x..............." },
+        "Big chorus": { kick: "x...x...x...x...", snare: "....X.......X...", hat: "x.X.x.X.x.X.x.X.", crash: "x..............." }
       },
-      riffs: { "Jangle": "AAAAAAAAAAAAAAAA", "Picked": "A.A.A.A.A.A.A.A.", "Strum": "P.P.P.mmP.P.P.mm" },
-      chorus: "open", chorusRiff: "P.P.P.mmP.P.P.mm", density: { verse: [0.7, 0.4], chorus: [0.8, 0.25] }
+      guitar: { "Jangle": "AAAAAAAAAAAAAAAA", "Picked": "A.A.A.A.A.A.A.A.", "Strum": "P.P.P.mmP.P.P.mm" },
+      bass: { "Octave 8ths": "r.o.r.o.r.o.r.o." },
+      def: { verse: ["Motorik", "Jangle", "Octave 8ths", "Steady"], chorus: ["Big chorus", "Strum", "Octave 8ths", "Soaring"] }
     },
     electronic: {
       label: "Electronic", blurb: "Four on the floor, rolling synth bass, big drops.", bpm: 126, tone: "synth", kit: "electronic", keys: "pad", root: 45,
-      progs: [{ name: "Night drive (i–♭VI–♭III–♭VII)", deg: [0, 5, 2, 6], mode: "minor" }, { name: "Euphoria (vi–IV–I–V)", deg: [5, 3, 0, 4], mode: "major" }],
-      beats: {
+      progs: [{ name: "Night drive (i–♭VI–♭III–♭VII)", mood: "Night drive", deg: [0, 5, 2, 6], mode: "minor" }, { name: "Euphoria (vi–IV–I–V)", mood: "Euphoric", deg: [5, 3, 0, 4], mode: "major" }],
+      drums: {
         "House": { kick: "x...x...x...x...", snare: "....X.......X...", hat: "x.X.x.X.x.X.x.X.", crash: "x..............." },
-        "Breakbeat": { kick: "x.....x...x.....", snare: "....X.......X..x", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." }
+        "Breakbeat": { kick: "x.....x...x.....", snare: "....X.......X..x", hat: "x.x.x.x.x.x.x.x.", crash: "x..............." },
+        "Drop": { kick: "X...X...X...X...", snare: "....X.......X...", hat: "..X...X...X...X.", crash: "x..............." }
       },
-      riffs: { "Arp": "AAAAAAAAAAAAAAAA", "Stabs": "P..P..P...P..P..", "Lead": "L.L.L...L.L.L..." },
-      chorus: "four", chorusRiff: "AAAAAAAAAAAAAAAA", density: { verse: [0.6, 0.2], chorus: [0.8, 0.15] }
+      guitar: { "Arp": "AAAAAAAAAAAAAAAA", "Stabs": "P..P..P...P..P..", "Lead": "L.L.L...L.L.L..." },
+      bass: { "Off-beat": "..r...o...r...o." },
+      def: { verse: ["House", "Stabs", "Off-beat", "Call & answer"], chorus: ["Drop", "Arp", "Off-beat", "Soaring"] }
     }
   };
   const GENRE_IDS = Object.keys(GENRES);
   const TONES = ["clean", "crunch", "dist", "metal", "synth"];
-  const FORM = [["Intro", 2], ["Verse", 4], ["Chorus", 4], ["Verse", 4], ["Chorus", 4], ["Outro", 1]];
 
-  const first = (o) => o[Object.keys(o)[0]];
-  function defaultGroove(genre) {
+  // Clips every genre can use
+  const COMMON = {
+    drums: {
+      "Count-in": { kick: "x.......x.......", snare: "................", hat: "x...x...x...x...", crash: "x..............." },
+      "Ending hit": { kick: "X...............", snare: "........X.......", hat: "................", crash: "X..............." },
+      "Silent": { kick: "................", snare: "................", hat: "................", crash: "................" }
+    },
+    guitar: { "Ring out": "P...............", "Silent": "................" },
+    bass: { "Follow guitar": "follow", "Root 8ths": "r.r.r.r.r.r.r.r.", "Root & fifth": "r.......f.......", "Walking": "r...f...o...f...", "Hold root": "r...............", "Silent": "................" },
+    vocals: {
+      "Steady": "1...3...5...3...2...1..._.......",
+      "Soaring": "5.......6...5...8...........____",
+      "Hook": "5_5_6_5_3...1...5_5_6_5_8.......",
+      "Chant": "1_1_1_..1_1_1_..3_3_3_..1.......",
+      "Call & answer": "1.3.5...________________5.3.1...",
+      "Low drone": "1...............1.......2.......",
+      "Rapid": "1_1_3_1_2_1_3_5_3_3_2_1_2...____",
+      "Silent": "________________________________"
+    }
+  };
+  // Plain-language hints for players who don't read music
+  const HINTS = {
+    "Gallop": "Horses charging: da-da-DUM, da-da-DUM", "Thrash": "Fast and furious, snare on every off-beat", "Double kick": "Both feet on the kick drums, a wall of thunder",
+    "Breakdown": "Slow, heavy and stompy. Mosh time", "Blast beat": "As fast as drums go", "Rock beat": "The classic backbeat", "Driving 8ths": "Pushes the song forward",
+    "Open hats": "Splashy and loud, for big choruses", "Half-time": "Feels twice as slow, twice as heavy", "Skate punk": "Bouncy, snare on the off-beat", "Punk rock": "Straight and fast",
+    "Crash ride": "Riding the crash cymbal, total chaos", "Pop groove": "Laid-back and catchy", "Four on the floor": "Kick on every beat, made for dancing", "Motorik": "Hypnotic, steady, never stops",
+    "Dance-punk": "Disco hats with a punk attitude", "Big chorus": "Lifts the chorus up", "House": "Club beat with open hats", "Breakbeat": "Choppy and funky", "Drop": "The moment the crowd jumps",
+    "Count-in": "A gentle start", "Ending hit": "One big final hit", "Silent": "This track sits out",
+    "Gallop chug": "Muted chugs in a gallop rhythm", "Chug & stab": "Chug, chug, then a big chord", "Tremolo lead": "Fast-picked melody notes", "Djent stop": "Stop-start, tight and heavy", "Big chords": "Huge ringing chords",
+    "Power stabs": "Short punchy chords", "Chug & chord": "Chords with muted chugs between", "Riff lick": "Chords with a little melody", "Open strum": "Let the chords ring", "Downstrokes": "Chord on every 8th note, punk style",
+    "Stop-start": "Play, play, play, stop", "Octaves": "Chords, then a higher line", "Muted strum": "Soft muted strums", "Chord hits": "Clean chords on the beat", "Arpeggio": "Chord notes one by one",
+    "Jangle": "Bright picked notes, all the time", "Picked": "Gentle picked notes", "Strum": "Strummed chords with muted ghosts", "Arp": "Synth notes racing up and down", "Stabs": "Short synth chords", "Lead": "A synth melody",
+    "Ring out": "One chord that rings to the end",
+    "Follow guitar": "Bass plays the same rhythm as the guitar", "Root 8ths": "Steady pulse on the main note", "Root & fifth": "Two long notes per bar", "Walking": "Moves up and down", "Hold root": "One long note",
+    "Pop bounce": "Bouncy and syncopated", "Octave 8ths": "Jumps between low and high", "Off-beat": "Between the kicks, club style",
+    "Steady": "Calm, easy melody", "Soaring": "Long high notes, for big choruses", "Hook": "Catchy repeated phrase", "Chant": "Shouted together, crowd-style", "Call & answer": "Sing, pause, answer",
+    "Low drone": "Low and menacing", "Rapid": "Lots of quick words"
+  };
+
+  // Every clip a track offers for a genre: the genre's own first, then the shared ones
+  function library(track, genre) {
     const G = GENRES[genre] || GENRES.rock;
-    return normalise({ genre, bpm: G.bpm, tone: G.tone, kit: G.kit, root: G.root, prog: 0, beat: { ...first(G.beats) }, riff: first(G.riffs), chorus: G.chorus });
+    const own = Object.entries(G[track] || {}).map(([name, p]) => ({ name, p, from: genre }));
+    const shared = Object.entries(COMMON[track]).map(([name, p]) => ({ name, p, from: "any" }));
+    return [...own, ...shared];
   }
-  // Fills in anything missing, so saved grooves keep working as the format grows.
-  function normalise(g) {
-    const G = GENRES[g.genre] || GENRES.rock;
-    const prog = typeof g.prog === "number" ? G.progs[g.prog] || G.progs[0] : g.prog || G.progs[0];
-    const pad = (p) => String(p || "").padEnd(16, ".").slice(0, 16);
+  function allClips(track) {
+    const seen = new Set(), out = [];
+    GENRE_IDS.forEach((id) => library(track, id).forEach((c) => { if (!seen.has(c.name)) { seen.add(c.name); out.push(c); } }));
+    return out;
+  }
+  function clipNamed(track, name, genre) {
+    const c = library(track, genre).find((x) => x.name === name) || allClips(track).find((x) => x.name === name);
+    return c ? { name: c.name, p: copy(c.p) } : null;
+  }
+  const copy = (p) => (typeof p === "string" ? p : { ...p });
+
+  const pad = (p, n, fill) => String(p || "").padEnd(n, fill).slice(0, n);
+  function normPattern(track, p) {
+    if (track === "drums") { const o = {}; DRUM_ROWS.forEach((r) => { o[r] = pad(p && p[r], 16, ".").replace(/[^.xXo]/g, "."); }); return o; }
+    if (track === "bass" && p === "follow") return "follow";
+    if (track === "vocals") return pad(p, 32, "_").replace(/[^._1-8]/g, "_");
+    if (track === "bass") return pad(p, 16, ".").replace(/[^.rfom]/g, ".");
+    return pad(p, 16, ".").replace(/[^.mPHLA]/g, ".");
+  }
+  function normClip(track, c, genre, fallback) {
+    if (!c || !c.p) return clipNamed(track, (c && c.name) || fallback, genre) || clipNamed(track, "Silent", genre);
+    return { name: String(c.name || "Custom").slice(0, 30), p: normPattern(track, c.p) };
+  }
+  const isSilent = (track, c) => (track === "drums" ? DRUM_ROWS.every((r) => !/[^.]/.test(c.p[r])) : track === "vocals" ? !/[1-8]/.test(c.p) : c.p !== "follow" && !/[^.]/.test(c.p));
+  function normProg(prog, G) {
+    const p = typeof prog === "number" ? G.progs[prog] || G.progs[0] : prog && prog.deg ? prog : G.progs[0];
+    return { name: String(p.name || "Custom"), mood: p.mood, deg: p.deg.slice(0, 4).map((d) => clampN(Math.round(d), 0, 6)), mode: SCALES[p.mode] ? p.mode : "minor" };
+  }
+  // all progressions from every genre (Pro mode offers any of them)
+  const ALL_PROGS = GENRE_IDS.flatMap((id) => GENRES[id].progs).filter((p, i, a) => a.findIndex((q) => q.name === p.name) === i);
+
+  function section(type, bars, prog, names, genre) {
+    const clips = {};
+    TRACKS.forEach((t, i) => { clips[t] = clipNamed(t, names[i], genre) || clipNamed(t, "Silent", genre); });
+    return { type, bars, prog: { ...prog }, clips };
+  }
+  // A new song's starting point for a genre: intro, verse, chorus, verse, chorus, outro.
+  function defaultArrangement(genre, progIndex = 0) {
+    const G = GENRES[genre] || GENRES.rock, prog = G.progs[progIndex] || G.progs[0];
+    const v = G.def.verse, c = G.def.chorus;
+    const intro = ["Count-in", v[1], "Silent", "Silent"], outro = ["Ending hit", "Ring out", "Hold root", "Silent"];
+    return normaliseArr({
+      genre, bpm: G.bpm, tone: G.tone, kit: G.kit, root: G.root,
+      sections: [section("Intro", 2, prog, intro, genre), section("Verse", 4, prog, v, genre), section("Chorus", 4, prog, c, genre),
+        section("Verse", 4, prog, v, genre), section("Chorus", 4, prog, c, genre), section("Outro", 1, prog, outro, genre)]
+    });
+  }
+  const MAX_SECTIONS = 12, MAX_BARS = 48;
+  // Fills in anything missing, so saved songs keep working as the format grows.
+  function normaliseArr(a) {
+    const genre = GENRES[a.genre] ? a.genre : "rock", G = GENRES[genre];
+    let sections = (a.sections || []).slice(0, MAX_SECTIONS).map((s) => ({
+      type: SECTION_TYPES.includes(s.type) ? s.type : "Verse",
+      bars: [1, 2, 4, 8].includes(s.bars) ? s.bars : 4,
+      prog: normProg(s.prog, G),
+      clips: Object.fromEntries(TRACKS.map((t) => [t, normClip(t, s.clips && s.clips[t], genre, "Silent")]))
+    }));
+    if (!sections.length) sections = defaultArrangement(genre).sections;
     return {
-      genre: GENRES[g.genre] ? g.genre : "rock",
-      bpm: Math.max(60, Math.min(230, Math.round(g.bpm || G.bpm))),
-      tone: TONES.includes(g.tone) ? g.tone : G.tone,
-      kit: ["power", "standard", "electronic"].includes(g.kit) ? g.kit : G.kit,
-      root: g.root || G.root,
-      prog: { name: prog.name, deg: prog.deg.slice(0, 4), mode: SCALES[prog.mode] ? prog.mode : "minor" },
-      beat: { kick: pad(g.beat && g.beat.kick), snare: pad(g.beat && g.beat.snare), hat: pad(g.beat && g.beat.hat), crash: pad(g.beat && g.beat.crash) },
-      riff: pad(g.riff).replace(/[^.mPHLA]/g, "."),
-      chorus: ["open", "double", "half", "four"].includes(g.chorus) ? g.chorus : G.chorus
+      v: 2, genre,
+      bpm: clampN(Math.round(a.bpm || G.bpm), 60, 230),
+      tone: TONES.includes(a.tone) ? a.tone : G.tone,
+      kit: ["power", "standard", "electronic"].includes(a.kit) ? a.kit : G.kit,
+      root: clampN(Math.round(a.root || G.root), 36, 47),
+      sections
     };
   }
-  // A groove for songs without one: the genre's presets, picked by the song's seed; style sets the pace.
-  function grooveFor(song, bandGenre) {
-    if (song.groove) return normalise(song.groove);
+  const totalBars = (a) => a.sections.reduce((n, s) => n + s.bars, 0);
+
+  // ---------- older songs ----------
+  // Studio v1 songs saved a single groove; starter songs only a genre and style.
+  function legacyGroove(song, bandGenre) {
+    if (song.groove) return song.groove;
     const genre = song.genre || bandGenre || "rock", G = GENRES[genre] || GENRES.rock;
     const rnd = seeded(`${song.id}|${genre}|${song.style}`);
     const pace = { Ballad: 0.7, Anthem: 1, Banger: 1.12 }[song.style] || 1;
-    return normalise({
-      genre, bpm: G.bpm * pace + Math.round(rnd() * 8 - 4), tone: G.tone, kit: G.kit, root: G.root,
-      prog: pick(rnd, G.progs), beat: { ...pick(rnd, Object.values(G.beats)) }, riff: pick(rnd, Object.values(G.riffs)),
-      chorus: song.style === "Ballad" ? "half" : G.chorus
-    });
+    return { genre, bpm: G.bpm * pace + Math.round(rnd() * 8 - 4), tone: G.tone, kit: G.kit, root: G.root,
+      prog: pick(rnd, G.progs), beat: { ...pick(rnd, Object.values(G.drums)) }, riff: pick(rnd, Object.values(G.guitar)), chorus: song.style === "Ballad" ? "half" : null };
   }
+  // the old "chorus feel" switches, applied to a copy of the verse beat
+  function chorusBeat(beat, feel) {
+    const B = Object.fromEntries(DRUM_ROWS.map((r) => [r, [...pad(beat[r], 16, ".")]]));
+    for (let i = 0; i < 16; i++) {
+      if (feel === "double") { if (B.kick[i] === ".") B.kick[i] = "o"; if (i % 4 === 0) B.crash[i] = "x"; }
+      if (feel === "half") { B.snare[i] = i === 8 ? "X" : "."; B.kick[i] = i === 0 || i === 10 ? "x" : "."; }
+      if (feel === "four") { if (i % 4 === 0) B.kick[i] = "X"; if (i % 4 === 2) B.hat[i] = "X"; }
+      if (feel === "open" && B.hat[i] !== ".") B.hat[i] = i % 4 === 2 ? "X" : "x";
+    }
+    return Object.fromEntries(DRUM_ROWS.map((r) => [r, B[r].join("")]));
+  }
+  const OLD_FEEL = { metal: "double", rock: "open", punk: "open", pop: "four", indie: "open", electronic: "four" };
+  const OLD_CHORUS_RIFF = { metal: "P.......P...P.P.", rock: "P.......P.....P.", punk: "P.P.P.P.P.P.P.P.", pop: "P...P...P.P.P...", indie: "P.P.P.mmP.P.P.mm", electronic: "AAAAAAAAAAAAAAAA" };
+  function fromLegacy(song, bandGenre) {
+    const g = legacyGroove(song, bandGenre), genre = GENRES[g.genre] ? g.genre : "rock", G = GENRES[genre];
+    const rnd = seeded(`${song.id}|${song.title}|melody`);
+    const prog = normProg(g.prog, G), feel = g.chorus || OLD_FEEL[genre];
+    const vox = Object.keys(COMMON.vocals).filter((n) => n !== "Silent");
+    const bassFor = (chorus) => G.def[chorus ? "chorus" : "verse"][2];
+    const verse = { drums: { name: "Verse beat", p: g.beat }, guitar: { name: "Verse riff", p: g.riff }, bass: clipNamed("bass", bassFor(false), genre), vocals: clipNamed("vocals", pick(rnd, vox), genre) };
+    const chorus = { drums: { name: "Chorus beat", p: chorusBeat(g.beat, feel) }, guitar: { name: "Chorus riff", p: OLD_CHORUS_RIFF[genre] }, bass: clipNamed("bass", feel === "double" ? "Follow guitar" : bassFor(true), genre), vocals: clipNamed("vocals", pick(rnd, vox), genre) };
+    const intro = { drums: clipNamed("drums", "Count-in", genre), guitar: verse.guitar, bass: clipNamed("bass", "Silent", genre), vocals: clipNamed("vocals", "Silent", genre) };
+    const outro = { drums: clipNamed("drums", "Ending hit", genre), guitar: clipNamed("guitar", "Ring out", genre), bass: clipNamed("bass", "Hold root", genre), vocals: clipNamed("vocals", "Silent", genre) };
+    const fast = g.bpm >= 160;
+    return normaliseArr({ genre, bpm: g.bpm, tone: g.tone, kit: g.kit, root: g.root, sections: [
+      { type: "Intro", bars: 2, prog, clips: intro }, { type: "Verse", bars: 4, prog, clips: verse }, { type: "Chorus", bars: 4, prog, clips: chorus },
+      { type: "Verse", bars: 4, prog, clips: verse }, { type: "Chorus", bars: fast ? 8 : 4, prog, clips: chorus }, { type: "Outro", bars: 1, prog, clips: outro }] });
+  }
+  // The arrangement for any song, old or new.
+  const arrangementFor = (song, bandGenre) => (song.arr ? normaliseArr(song.arr) : fromLegacy(song, bandGenre));
 
-  // ---------- one bar of each part ----------
-  const steps = (p) => [...p].map((c) => (c === "X" ? 2 : c === "x" ? 1 : 0));
-  function barMaker(g, add) {
-    const scale = SCALES[g.prog.mode];
-    const note = (deg, oct) => g.root + 12 * oct + scale[((deg % 7) + 7) % 7] + 12 * Math.floor(deg / 7);
-    const minorish = g.prog.mode !== "major";
-    const penta = minorish ? [0, 3, 5, 7, 10, 12] : [0, 2, 4, 7, 9, 12];
-    const B = steps(g.beat.kick), S = steps(g.beat.snare), Hh = steps(g.beat.hat), C = steps(g.beat.crash);
-    const snareKind = g.kit === "electronic" ? "clap" : "snare";
-    const hit = (t, i, kind, vel, accent, extra) => add("drums", t + i / 4, 0.25, kind, { vel, accent, ...extra });
+  // ---------- playing a section ----------
+  const LEVEL = { ".": 0, x: 1, X: 2, o: 3 };
+  const VOCAL_LIFT = { Chorus: 2, "Pre-chorus": 1, Bridge: 1, Solo: 2 };
+  const BIG = new Set(["Chorus", "Outro", "Solo"]);
+  const fold = (m, lo, hi) => { while (m < lo) m += 12; while (m > hi) m -= 12; return m; };
 
-    function drums(section, t, bar, fill, isFirst) {
-      if (section === "Outro") { hit(t, 0, "crash", 1, true); hit(t, 0, "kick", 1, true); hit(t, 8, snareKind, 0.9, true); return; }
-      const intro0 = section === "Intro" && bar === 0;
-      for (let i = 0; i < 16; i++) {
-        if (fill && i >= 12) continue;
-        let k = B[i], s = S[i], h = Hh[i], c = C[i];
-        if (section === "Chorus") {
-          if (g.chorus === "double") { if (!k) k = 3; if (i % 4 === 0) c = 1; }   // 3 = softer double-kick fill
-          if (g.chorus === "half") { s = i === 8 ? 2 : 0; k = i === 0 || i === 10 ? 1 : 0; }
-          if (g.chorus === "four") { if (i % 4 === 0) k = 2; if (i % 4 === 2) h = 2; }
-          if (g.chorus === "open" && h) h = i % 4 === 2 ? 2 : 1;
-        }
-        if (intro0) { s = 0; if (i % 4) k = 0; }
-        if (isFirst && i === 0 && section !== "Intro") c = 1;
-        if (k) hit(t, i, "kick", k === 2 ? 1 : k === 3 ? 0.6 : 0.82, (i % 4 === 0 || k === 2) && k !== 3);
-        if (s) hit(t, i, snareKind, s === 2 ? 1 : 0.7, i % 4 === 0 || s === 2);
-        if (h && !c) hit(t, i, h === 2 ? "ohat" : "hat", i % 2 ? 0.55 : 0.75, h === 2);
-        if (c) hit(t, i, g.genre === "metal" && i % 8 === 4 ? "china" : "crash", 1, true);
-      }
-      if (fill) [12, 13, 14, 15].forEach((i, n) => hit(t, i, n < 2 ? snareKind : "tom", 0.75 + n * 0.07, n === 0, { tom: n }));
+  // Adds one section's notes starting at beat t0. o: { next (a section follows), crashIn, only (track list) }
+  function renderSection(a, sec, t0, add, o = {}) {
+    const prog = sec.prog, scale = SCALES[prog.mode];
+    const note = (deg, oct) => a.root + 12 * oct + scale[((deg % 7) + 7) % 7] + 12 * Math.floor(deg / 7);
+    const penta = prog.mode !== "major" ? [0, 3, 5, 7, 10, 12] : [0, 2, 4, 7, 9, 12];
+    const snareKind = a.kit === "electronic" ? "clap" : "snare";
+    const on = (t) => !o.only || o.only.includes(t);
+    const clips = sec.clips;
+    const fills = on("drums") && o.next && sec.type !== "Intro" && sec.type !== "Outro" && !isSilent("drums", clips.drums);
+
+    for (let b = 0; b < sec.bars; b++) {
+      const t = t0 + b * 4, deg = prog.deg[b % prog.deg.length];
+      if (on("drums")) drums(clips.drums.p, t, fills && b === sec.bars - 1, o.crashIn && b === 0);
+      if (on("guitar")) riff(clips.guitar.p, t, deg);
+      if (on("bass")) bass(clips.bass.p, t, deg);
+      if (on("keys")) keys(t, deg);
+      if (on("vocals")) vocals(clips.vocals.p, t, b, deg);
     }
 
-    function riffNotes(pattern, t, deg, kindFor) {
+    function drums(p, t, fill, crashIn) {
+      const hit = (i, kind, vel, accent, extra) => add("drums", t + i / 4, 0.25, kind, { vel, accent, ...extra });
+      for (let i = 0; i < 16; i++) {
+        if (fill && i >= 12) continue;
+        const k = LEVEL[p.kick[i]], s = LEVEL[p.snare[i]], h = LEVEL[p.hat[i]];
+        let c = LEVEL[p.crash[i]];
+        if (crashIn && i === 0 && sec.type !== "Intro" && (k || s)) c = c || 1;
+        if (k) hit(i, "kick", k === 2 ? 1 : k === 3 ? 0.6 : 0.82, (i % 4 === 0 || k === 2) && k !== 3);
+        if (s) hit(i, snareKind, s === 2 ? 1 : s === 3 ? 0.45 : 0.7, (i % 4 === 0 || s === 2) && s !== 3);
+        if (h && !c) hit(i, h === 2 ? "ohat" : "hat", h === 3 ? 0.4 : i % 2 ? 0.55 : 0.75, h === 2);
+        if (c) hit(i, a.genre === "metal" && i % 8 === 4 ? "china" : "crash", c === 3 ? 0.6 : 1, c !== 3);
+      }
+      if (fill) [12, 13, 14, 15].forEach((i, n) => hit(i, n < 2 ? snareKind : "tom", 0.75 + n * 0.07, n === 0, { tom: n }));
+    }
+    // length of a step's note: until the next step that isn't a rest, at most `cap` steps
+    function span(cells, i, cap, isHold) {
+      let j = i + 1;
+      while (j < cells.length && isHold(cells[j])) j++;
+      return Math.min(j - i, cap) / 4;
+    }
+    function riff(p, t, deg) {
       const root = note(deg, 1), triad = [0, 2, 4].map((d) => note(deg + d, 1));
       let lead = 0, arp = 0;
-      const cells = [...pattern];
+      const cells = [...p];
       cells.forEach((c, i) => {
         if (c === ".") return;
-        let j = i + 1;
-        while (j < 16 && cells[j] === ".") j++;
-        const len = Math.min(j - i, 8) / 4;
+        const len = span(cells, i, 16, (x) => x === ".");
         const accent = i % 4 === 0 || c === "P";
         if (c === "m") add("guitar", t + i / 4, 0.25, "mute", { midi: root, accent: i % 4 === 0 });
         else if (c === "P") add("guitar", t + i / 4, len, "power", { midi: root, accent });
         else if (c === "H") add("guitar", t + i / 4, len, "note", { midi: root + 12, accent });
         else if (c === "L") add("guitar", t + i / 4, len, "note", { midi: root + 12 + penta[lead++ % penta.length], accent: i % 2 === 0 });
-        else if (c === "A") add("guitar", t + i / 4, len, kindFor("A"), { midi: [triad[0] + 12, triad[1] + 12, triad[2] + 12, triad[0] + 24][arp++ % 4], accent: i % 4 === 0 });
+        else if (c === "A") add("guitar", t + i / 4, len, a.tone === "synth" ? "synth" : "pluck", { midi: [triad[0] + 12, triad[1] + 12, triad[2] + 12, triad[0] + 24][arp++ % 4], accent: i % 4 === 0 });
       });
     }
-
-    function guitar(section, t, bar, deg) {
-      if (section === "Outro") return add("guitar", t, 3.5, "power", { midi: note(deg, 1), accent: true });
-      const pattern = section === "Chorus" ? GENRES[g.genre].chorusRiff : g.riff;
-      riffNotes(pattern, t, deg, () => (g.tone === "synth" ? "synth" : "pluck"));
-    }
-
-    function bass(section, t, bar, deg) {
-      const r = note(deg, 0) - (g.root >= 43 ? 12 : 0);
-      const n = (i, len, m, accent) => add("bass", t + i / 4, len, "note", { midi: m, accent });
-      if (section === "Intro" && bar === 0) return;
-      if (section === "Outro") return n(0, 3.5, r, true);
-      if (g.genre === "electronic") { [2, 6, 10, 14].forEach((i) => n(i, 0.4, i % 8 === 6 ? r + 12 : r, true)); return; }
-      if (g.genre === "pop") { [0, 3, 6, 8, 11, 14].forEach((i) => n(i, 0.6, r, i % 4 === 0)); return; }
-      if (g.genre === "indie") { for (let i = 0; i < 16; i += 2) n(i, 0.45, i % 4 ? r + 12 : r, i % 4 === 0); return; }
-      // rock / metal / punk: lock to the riff's rhythm
-      const pattern = section === "Chorus" && g.chorus !== "double" ? "x.x.x.x.x.x.x.x." : g.riff;
-      [...pattern].forEach((c, i) => { if (c !== ".") n(i, c === "m" ? 0.22 : 0.45, r, i % 4 === 0); });
-    }
-
-    function keys(section, t, deg) {
-      const kind = GENRES[g.genre].keys;
-      if (!kind || section === "Intro") return;
-      const triad = [0, 2, 4].map((d) => note(deg + d, 2) - (g.root >= 43 ? 12 : 0));
-      const chorus = section === "Chorus" || section === "Outro";
-      if (chorus || g.genre === "electronic") add("keys", t, 3.8, "pad", { notes: triad, midi: triad[0], accent: true });
-      if (g.genre === "pop" && !chorus) [0, 8].forEach((i) => add("keys", t + i / 4, 1.8, "pad", { notes: triad, midi: triad[0], accent: true }));
-      if (chorus && (g.genre === "electronic" || g.genre === "pop")) for (let i = 0; i < 16; i += 2) add("keys", t + i / 4, 0.4, "arp", { midi: triad[(i / 2) % 3] + 12, accent: i % 4 === 0, vel: 0.5 });
-    }
-    return { drums, guitar, bass, keys, note };
-  }
-
-  // Two bars of melody rhythm + contour. Strong beats take chord tones, others step by scale.
-  function makeMelody(rnd, density) {
-    return [0, 1].map((bar) => {
-      const starts = [];
-      for (let e = 0; e < 8; e++) {
-        const p = e % 2 === 0 ? density[0] : density[1];
-        if (e === 0 || rnd() < p) starts.push(e);
+    function bass(p, t, deg) {
+      const low = a.root >= 43 ? 12 : 0, r = note(deg, 0) - low, f = note(deg + 4, 0) - low;
+      if (p === "follow") {
+        [...clips.guitar.p].forEach((c, i) => { if (c !== ".") add("bass", t + i / 4, c === "m" ? 0.22 : 0.45, "note", { midi: r, accent: i % 4 === 0 }); });
+        return;
       }
-      if (bar === 1 && starts.length > 2) starts.pop();
-      return starts.map((s, i) => {
-        const next = i + 1 < starts.length ? starts[i + 1] : 8;
-        const r = rnd();
-        return { off: s / 2, dur: Math.min((next - s) / 2, 2) * 0.92, strong: s % 2 === 0, idx: r < 0.45 ? 0 : r < 0.8 ? 1 : 2, step: r < 0.5 ? 1 : -1 };
+      const cells = [...p];
+      cells.forEach((c, i) => {
+        if (c === ".") return;
+        const len = c === "m" ? 0.22 : span(cells, i, 16, (x) => x === ".") * 0.9;
+        add("bass", t + i / 4, len, "note", { midi: c === "f" ? f : c === "o" ? r + 12 : r, accent: i % 4 === 0 });
       });
-    });
+    }
+    function keys(t, deg) {
+      const kind = GENRES[a.genre].keys;
+      if (!kind || sec.type === "Intro") return;
+      const triad = [0, 2, 4].map((d) => note(deg + d, 2) - (a.root >= 43 ? 12 : 0));
+      const big = BIG.has(sec.type);
+      if (big || a.genre === "electronic") add("keys", t, 3.8, "pad", { notes: triad, midi: triad[0], accent: true });
+      if (a.genre === "pop" && !big) [0, 8].forEach((i) => add("keys", t + i / 4, 1.8, "pad", { notes: triad, midi: triad[0], accent: true }));
+      if (big && (a.genre === "electronic" || a.genre === "pop")) for (let i = 0; i < 16; i += 2) add("keys", t + i / 4, 0.4, "arp", { midi: triad[(i / 2) % 3] + 12, accent: i % 4 === 0, vel: 0.5 });
+    }
+    function vocals(p, t, b, deg) {
+      const cells = [...p.slice((b % 2) * 16, (b % 2) * 16 + 16)], lift = VOCAL_LIFT[sec.type] || 0;
+      cells.forEach((c, i) => {
+        if (!/[1-8]/.test(c)) return;
+        const dur = span(cells, i, 16, (x) => x === ".") * 0.92;
+        add("vocals", t + i / 4, dur, "lead", { midi: fold(note(deg + Number(c) - 1 + 7 + lift, 1), 57, 76), accent: i % 4 === 0 || dur >= 0.5 });
+      });
+    }
+    return note;
   }
-  const fold = (m, lo, hi) => { while (m < lo) m += 12; while (m > hi) m -= 12; return m; };
 
   function compose(song, bandGenre) {
-    const g = grooveFor(song, bandGenre), G = GENRES[g.genre];
-    const rnd = seeded(`${song.id}|${song.title}|melody`);
+    const a = arrangementFor(song, bandGenre);
     const events = [], sections = [];
     const add = (part, beat, dur, kind, extra) => events.push({ part, beat, dur, kind, vel: 0.8, accent: false, ...extra });
-    const bar = barMaker(g, add);
-    const melodies = { Verse: makeMelody(rnd, G.density.verse), Chorus: makeMelody(rnd, G.density.chorus) };
-    const form = g.bpm >= 160 ? FORM.map(([n, b], i) => [n, i === 4 ? 8 : b]) : FORM;
-    let beat = 0;
-    form.forEach(([name, bars], sIndex) => {
-      sections.push({ name, beat });
-      const last = sIndex === form.length - 1;
-      let melodyDeg = 7;
-      for (let b = 0; b < bars; b++) {
-        const t = beat + b * 4, deg = g.prog.deg[b % 4];
-        bar.drums(name, t, b, b === bars - 1 && !last && name !== "Intro", b === 0);
-        bar.guitar(name, t, b, deg);
-        bar.bass(name, t, b, deg);
-        bar.keys(name, t, deg);
-        if (name === "Verse" || name === "Chorus") {
-          const lift = name === "Chorus" ? 2 : 0;
-          melodies[name][b % 2].forEach((n) => {
-            melodyDeg = n.strong ? deg + [0, 2, 4][n.idx] + 7 + lift : melodyDeg + n.step;
-            add("vocals", t + n.off, n.dur, "lead", { midi: fold(bar.note(melodyDeg, 1), 57, 76), accent: n.dur >= 0.5 || n.strong });
-          });
-        }
-      }
-      beat += bars * 4;
+    let beat = 0, note = null;
+    a.sections.forEach((sec, i) => {
+      sections.push({ name: sec.type, beat });
+      const n = renderSection(a, sec, beat, add, { next: i < a.sections.length - 1, crashIn: true });
+      if (!note) note = n;
+      beat += sec.bars * 4;
     });
+    // the final hit
     add("drums", beat, 2, "crash", { vel: 1, accent: true });
     add("drums", beat, 0.5, "kick", { vel: 1, accent: true });
-    add("bass", beat, 2, "note", { midi: bar.note(0, 0), accent: true });
-    add("guitar", beat, 2.5, "power", { midi: bar.note(0, 1), accent: true });
-    events.sort((a, b) => a.beat - b.beat);
-    return { title: song.title, genre: g.genre, groove: g, bpm: g.bpm, root: g.root, mode: g.prog.mode, key: keyName(g.root, g.prog.mode), beats: beat + 2, sections, events };
+    add("bass", beat, 2, "note", { midi: note(0, 0) - (a.root >= 43 ? 12 : 0), accent: true });
+    add("guitar", beat, 2.5, "power", { midi: note(0, 1), accent: true });
+    events.sort((x, y) => x.beat - y.beat);
+    const first = a.sections[0].prog;
+    return { title: song.title, genre: a.genre, groove: a, bpm: a.bpm, root: a.root, mode: first.mode, key: keyName(a.root, first.mode), beats: beat + 2, sections, events };
   }
 
-  // Two bars for the studio preview (bar 1 as verse, bar 2 as chorus, or both as one section).
-  function composeLoop(groove, section) {
-    const g = normalise(groove), events = [];
+  // Studio previews. One section on a loop (o.only limits the tracks), or one clip on its own for two bars.
+  function composeSection(a, index, o = {}) {
+    a = normaliseArr(a);
+    const sec = a.sections[index] || a.sections[0], events = [];
     const add = (part, beat, dur, kind, extra) => events.push({ part, beat, dur, kind, vel: 0.8, accent: false, ...extra });
-    const bar = barMaker(g, add);
-    [0, 1].forEach((b) => {
-      const sec = section || (b === 0 ? "Verse" : "Chorus"), deg = g.prog.deg[b % 4];
-      bar.drums(sec, b * 4, b, false, b === 0);
-      bar.guitar(sec, b * 4, b, deg);
-      bar.bass(sec, b * 4, b, deg);
-      bar.keys(sec, b * 4, deg);
-    });
-    events.sort((a, b) => a.beat - b.beat);
-    return { genre: g.genre, groove: g, bpm: g.bpm, beats: 8, sections: [], events };
+    renderSection(a, sec, 0, add, { next: true, crashIn: true, only: o.only });
+    events.sort((x, y) => x.beat - y.beat);
+    return { genre: a.genre, groove: a, bpm: a.bpm, beats: sec.bars * 4, sections: [], events };
+  }
+  function composeClip(a, track, clip, sectionIndex = 0) {
+    a = normaliseArr(a);
+    const base = a.sections[sectionIndex] || a.sections[0];
+    const sec = { ...base, bars: 2, clips: { ...base.clips, [track]: { name: clip.name, p: normPattern(track, clip.p) } } };
+    const events = [];
+    const add = (part, beat, dur, kind, extra) => events.push({ part, beat, dur, kind, vel: 0.8, accent: false, ...extra });
+    // bass "follow" needs the guitar's rhythm but plays alone
+    renderSection(a, sec, 0, add, { next: false, crashIn: false, only: [track] });
+    events.sort((x, y) => x.beat - y.beat);
+    return { genre: a.genre, groove: a, bpm: a.bpm, beats: 8, sections: [], events };
   }
 
   const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -341,5 +462,9 @@ window.AmpedComposer = (() => {
   }
   const TRACK_GAP = { easy: 0.45, normal: 0.26, hard: 0.16 };
 
-  return { GENRES, GENRE_IDS, compose, composeLoop, grooveFor, defaultGroove, normalise, chart, trackChart };
+  return {
+    GENRES, GENRE_IDS, TRACKS, SECTION_TYPES, DRUM_ROWS, HINTS, ALL_PROGS, MAX_SECTIONS, MAX_BARS,
+    library, allClips, clipNamed, isSilent, normPattern, defaultArrangement, normaliseArr, arrangementFor, totalBars, keyName,
+    compose, composeSection, composeClip, chart, trackChart
+  };
 })();

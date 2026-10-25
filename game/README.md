@@ -24,7 +24,7 @@ The game also pauses when the tab is hidden or the window loses focus.
 | `css/tokens.css` | Copied unchanged from `design/kit/design/tokens.css` |
 | `css/app.css` | All UI styling, built on the kit tokens; DejaVu Sans from the kit |
 | `js/data.js` | Content and tuning: members, scene layouts, venue, songwriting, costs, rhythm settings |
-| `js/composer.js` | Genre presets (metal, rock, punk, pop, indie, electronic) and the groove model the studio edits (tempo, tone, kit, chords, 16-step beat and riff); arranges each song into intro/verse/chorus/outro for five parts; builds charts from the part you play |
+| `js/composer.js` | Song model (sections × tracks of 16-step clips), sample libraries per genre with plain-language hints, conversion of older songs, playing songs/sections/single clips, and charts from the part you play |
 | `js/audio.js` | Web Audio clock, synth band for generated songs, recorded-song playback, metronome, SFX |
 | `assets/instruments/` | Sampled band instruments (drum kits, guitars, bass, piano, organ, voices) rendered by `tools/render_instruments.py` |
 | `assets/music/` | Licensed recordings + auto-charts (none at the moment; pipeline in `tools/prepare_music.py`) |
@@ -48,7 +48,7 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 - **Real instruments**: generated songs play on sampled drums, double-tracked distorted guitar, pick bass, piano/organ, a lead voice and backing choir, with timing/velocity humanising and a stereo mix (synth fallback if a sample fails to load)
 - Music credits in Settings
 - **Map (Road to Solstice)**: 11 venues from the street corner to the Solstice festival, in acts; each unlocks by fame, wins at earlier venues and songs written; venue sheet with capacity, pay, crowd toughness; bigger venues pay more and punish misses harder
-- **Studio**: pick genre, guitar tone (clean / crunch / distorted / metal / synth), drum kit, tempo, chords and chorus feel; program the beat and the guitar riff on 16-step grids; hear verse/chorus live before recording
+- **Studio**: songs are built on four tracks (drums, guitar, bass, vocals) across sections (intro, verse, chorus...). Each box holds a sample picked from a library with plain-language descriptions and a mini picture of the pattern; ▶ plays a sample on its own, choosing it loops that section with the band, and **Play song** plays the whole song with a moving playhead. Guitar sound, drum kit, speed and mood; mute per track. **Easy** needs no music theory. **Pro** (fame level 3, or Hard difficulty chosen at band setup or in Settings) adds step editors for every sample (drum grid, guitar and bass steps, a vocal piano roll), section structure (add, move, duplicate, delete, length), chords per section and key
 - **Gig camera**: cuts on the beat between wide shots, close-ups, two-shots and a shot from the pit; flash on section changes, light pulses in choruses, a foreground crowd that grows with the venue; reduced motion keeps one steady wide shot
 - Generated songs: theme picks the key/mode, style picks tempo and feel (Ballad, Anthem, Banger); drums, bass, distorted guitar, keys and a sung lead line with room reverb
 - Charts from the actual notes of your part, thinned by difficulty in seconds so fast songs stay fair

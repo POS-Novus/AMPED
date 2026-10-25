@@ -376,7 +376,10 @@
     toast("A lazy day. Everyone feels better.");
     go("hq");
   }
-  // ---------- studio: write a song by building its groove ----------
+  // ---------- studio: build a song from sample clips on four tracks ----------
+  // Easy: pick clips for each section from plain-language libraries, pick a mood and speed.
+  // Pro (fame level 3, or Hard difficulty): edit clips step by step, change the song's structure,
+  // chords per section and key.
   const C = window.AmpedComposer;
   const TONES = [
     { id: "clean", label: "Clean", hint: "Bright, no distortion" },
@@ -386,68 +389,140 @@
     { id: "synth", label: "Synth", hint: "Saw lead instead of guitar" }
   ];
   const KITS = [{ id: "power", label: "Rock kit" }, { id: "standard", label: "Standard kit" }, { id: "electronic", label: "Electronic kit" }];
-  const CHORUS = [{ id: "open", label: "Open chords" }, { id: "double", label: "Double kick" }, { id: "half", label: "Half-time" }, { id: "four", label: "Four on the floor" }];
-  const DRUM_ROWS = [{ id: "kick", label: "Kick" }, { id: "snare", label: "Snare / clap" }, { id: "hat", label: "Hi-hat", accent: "open" }, { id: "crash", label: "Crash" }];
-  const RIFF_CYCLE = [".", "m", "P", "H", "L", "A"];
-  const RIFF_NAMES = { ".": "rest", m: "chug (palm mute)", P: "power chord", H: "high note", L: "lead lick", A: "arpeggio" };
-  const RIFF_GLYPH = { ".": "", m: "m", P: "P", H: "H", L: "L", A: "A" };
+  const TRACK_INFO = { drums: { label: "Drums", icon: "drums" }, guitar: { label: "Guitar", icon: "guitar" }, bass: { label: "Bass", icon: "bass" }, vocals: { label: "Vocals", icon: "mic" } };
+  const DRUM_LABELS = { kick: "Kick", snare: "Snare", hat: "Hi-hat", crash: "Crash" };
+  const CYCLES = {
+    drums: [".", "x", "X", "o"],
+    guitar: [".", "m", "P", "H", "L", "A"],
+    bass: [".", "r", "f", "o", "m"]
+  };
+  const STEP_NAMES = {
+    drums: { ".": "off", x: "hit", X: "accent", o: "ghost (soft)" },
+    guitar: { ".": "rest", m: "chug (palm mute)", P: "power chord", H: "high note", L: "lead lick", A: "arpeggio" },
+    bass: { ".": "rest", r: "root", f: "fifth", o: "octave", m: "short muted note" }
+  };
+  const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const COMBOS = { "Rebellion|punk": 16, "Rebellion|metal": 16, "Rebellion|rock": 12, "Heartbreak|indie": 14, "Heartbreak|rock": 10, "Party|pop": 14, "Party|electronic": 14, "Love|pop": 10 };
+  const PRO_FAME = 3;
+  const proUnlocked = () => state.band.difficulty === "hard" || state.res.fame >= PRO_FAME;
+
+  // A small picture of a clip: drum hits, chord stabs, bass notes or the melody's shape, with a playhead
+  function mini(track, p, guitarP) {
+    if (track === "bass" && p === "follow") p = [...(guitarP || "")].map((c) => (c === "." ? "." : c === "m" ? "m" : "r")).join("");
+    const n = track === "vocals" ? 32 : 16;
+    let r = "";
+    const bar = (i, y, h, cls) => { r += `<rect class="${cls}" x="${i + 0.12}" y="${y}" width="0.76" height="${h}" rx="0.2"/>`; };
+    if (track === "drums") {
+      for (let i = 0; i < 16; i++) {
+        if (p.crash[i] !== "." ) bar(i, 0, 1.6, "m-c");
+        else if (p.hat[i] !== ".") bar(i, 0.4, 1.2, p.hat[i] === "X" ? "m-c" : "m-h");
+        if (p.snare[i] !== ".") bar(i, 2.6, 2.4, p.snare[i] === "o" ? "m-g" : "m-s");
+        if (p.kick[i] !== ".") bar(i, 5.6, 2.4, p.kick[i] === "o" ? "m-g" : "m-k");
+      }
+    } else if (track === "vocals") {
+      let last = 0;
+      [...p].forEach((c, i) => {
+        if (/[1-8]/.test(c)) last = Number(c); else if (c === "_") last = 0;
+        if (last) r += `<rect class="${/[1-8]/.test(c) ? "m-v" : "m-vh"}" x="${i}" y="${8 - last}" width="1" height="1" rx="0.3"/>`;
+      });
+    } else {
+      const shape = track === "guitar" ? { P: [0, 8], m: [5.5, 2.5], H: [0.5, 3], L: [1.5, 3], A: [3, 3] } : { r: [5, 3], f: [3, 3], o: [0.5, 3], m: [6, 2] };
+      [...p].forEach((c, i) => { if (shape[c]) bar(i, shape[c][0], shape[c][1], `m-${track === "guitar" ? "g" + c : "b"}`); });
+    }
+    return `<span class="mini" style="--n:${n}"><svg viewBox="0 0 ${n} 8" preserveAspectRatio="none" aria-hidden="true">${r}</svg><i class="ph"></i></span>`;
+  }
 
   const studio = (() => {
-    let draft = null, loop = null, raf = 0, section = "Verse";
+    let draft = null, play = null, raf = 0;
+    const mute = {};
     const bandGenre = () => state.band.genre || "rock";
+    const isPro = () => proUnlocked() && (state.studioPro ?? state.band.difficulty === "hard");
     function reset(genre) {
       const keep = draft ? { title: draft.title, theme: draft.theme } : { title: "", theme: "Rebellion" };
-      draft = { ...keep, groove: C.defaultGroove(genre || bandGenre()) };
+      draft = { ...keep, arr: C.defaultArrangement(genre || bandGenre()), sel: { track: "drums", sec: 1 }, linked: true };
     }
-    const G = () => C.GENRES[draft.groove.genre];
+    const A_ = () => draft.arr;
+    const secOf = (i) => A_().sections[i];
+    const sameType = (i) => (draft.linked ? A_().sections.map((s, j) => (s.type === secOf(i).type ? j : -1)).filter((j) => j >= 0) : [i]);
+    const typeNumber = (i) => A_().sections.slice(0, i + 1).filter((s) => s.type === secOf(i).type).length;
+    const secLabel = (i) => { const n = A_().sections.filter((s) => s.type === secOf(i).type).length; return n > 1 ? `${secOf(i).type} ${typeNumber(i)}` : secOf(i).type; };
+    const songSeconds = () => Math.round(C.totalBars(A_()) * 4 * 60 / A_().bpm);
+    const speedWord = (bpm) => (bpm < 90 ? "Slow" : bpm < 120 ? "Medium" : bpm < 160 ? "Fast" : "Very fast");
+
     function render(el) {
       if (!draft) reset();
-      const g = draft.groove, low = tired(DATA.costs.write);
-      const grid = (row, pattern, cell) => `<div class="step-grid" role="group" aria-label="${row}">${[...pattern].map((c, i) => cell(c, i)).join("")}</div>`;
+      const a = A_(), G = C.GENRES[a.genre], low = tired(DATA.costs.write), pro = isPro();
+      if (draft.sel.sec >= a.sections.length) draft.sel.sec = a.sections.length - 1;
+      const sel = draft.sel, sec = secOf(sel.sec), clip = sec.clips[sel.track];
+      const moodIndex = G.progs.findIndex((p) => p.name === a.sections[Math.min(1, a.sections.length - 1)].prog.name);
       el.innerHTML = `
         <section class="studio">
-          <span class="badge">Studio</span>
-          <h2 class="display">Write a song.</h2>
+          <div class="row-between studio-top">
+            <div><span class="badge">Studio</span><h2 class="display">Write a song.</h2></div>
+            <div class="seg" role="group" aria-label="Studio mode">
+              <button type="button" data-mode="easy" aria-pressed="${!pro}">Easy</button>
+              <button type="button" data-mode="pro" aria-pressed="${pro}" ${proUnlocked() ? "" : "disabled"}>${proUnlocked() ? "" : icon("lock")}Pro</button>
+            </div>
+          </div>
+          <p class="small muted">${pro
+            ? "Pro: edit every sample step by step, add and move sections, pick chords and key."
+            : `Pick a sample for each track in each part of the song. No music theory needed.${proUnlocked() ? "" : ` Pro tools unlock at fame level ${PRO_FAME}, or straight away on Hard difficulty (Settings).`}`}</p>
           <form class="stack" id="write-form" novalidate>
             <label class="field"><span>Song title</span><input name="title" maxlength="40" autocomplete="off" placeholder="Name your song" value="${esc(draft.title)}"></label>
             <fieldset class="field"><legend>Theme</legend><div class="chips">${DATA.songwriting.themes.map((t) => `<label class="pick"><input type="radio" name="theme" value="${t}" ${t === draft.theme ? "checked" : ""}><span>${t}</span></label>`).join("")}</div></fieldset>
-            <fieldset class="field"><legend>Genre</legend><div class="chips">${C.GENRE_IDS.map((id) => `<label class="pick"><input type="radio" name="genre" value="${id}" ${id === g.genre ? "checked" : ""}><span>${C.GENRES[id].label}</span></label>`).join("")}</div>
-              <span class="small muted">${G().blurb} Changing genre loads its sound.</span></fieldset>
+            <fieldset class="field"><legend>Genre</legend><div class="chips">${C.GENRE_IDS.map((id) => `<label class="pick"><input type="radio" name="genre" value="${id}" ${id === a.genre ? "checked" : ""}><span>${C.GENRES[id].label}</span></label>`).join("")}</div>
+              <span class="small muted">${G.blurb} Changing genre starts the song again from that genre's sound.</span></fieldset>
+
+            <div class="card stack">
+              <div class="row-between"><h3>Tracks</h3><span class="small muted">${C.totalBars(a)} bars · ${Math.floor(songSeconds() / 60)}:${String(songSeconds() % 60).padStart(2, "0")}</span></div>
+              <p class="small muted">Each column is a part of the song. Tap a box to choose its sample.</p>
+              <div class="arranger" style="--cols:${a.sections.length}">
+                <div class="arr-row arr-head">
+                  <span class="trk-name"></span>
+                  ${a.sections.map((s, i) => `<button type="button" class="sec-head ${i === sel.sec ? "is-sel" : ""}" data-sec="${i}"><b>${secLabel(i)}</b><small>${s.bars} bar${s.bars > 1 ? "s" : ""}</small></button>`).join("")}
+                  ${pro && a.sections.length < C.MAX_SECTIONS ? `<button type="button" class="sec-add" data-add-sec aria-label="Add a section">${icon("plus")}</button>` : ""}
+                </div>
+                ${C.TRACKS.map((t) => `<div class="arr-row ${mute[t] ? "is-muted" : ""}">
+                  <span class="trk-name">${icon(TRACK_INFO[t].icon)}<span>${TRACK_INFO[t].label}</span>
+                    <button type="button" class="mute" data-mute="${t}" aria-pressed="${!!mute[t]}" aria-label="Mute ${TRACK_INFO[t].label}">M</button></span>
+                  ${a.sections.map((s, i) => `<button type="button" class="clip-cell trk-${t} ${i === sel.sec && t === sel.track ? "is-sel" : ""} ${C.isSilent(t, s.clips[t]) ? "is-silent" : ""}" data-cell="${t}:${i}" aria-label="${TRACK_INFO[t].label}, ${secLabel(i)}: ${esc(s.clips[t].name)}">
+                    <b>${esc(s.clips[t].name)}</b>${mini(t, s.clips[t].p, s.clips.guitar.p)}</button>`).join("")}
+                </div>`).join("")}
+              </div>
+            </div>
+
+            <div class="card stack lib">
+              <div class="row-between"><h3>${icon(TRACK_INFO[sel.track].icon)}${TRACK_INFO[sel.track].label} · ${secLabel(sel.sec)}</h3>
+                <label class="check"><input type="checkbox" name="linked" ${draft.linked ? "checked" : ""}><span>Same for every ${sec.type}</span></label></div>
+              <p class="small muted">${icon("play")} hears a sample on its own. Tap its name to use it here.</p>
+              ${libraryHtml(sel.track, a.genre, clip, pro, sec.clips.guitar.p)}
+              ${pro ? editorHtml(sel.track, clip, sec.clips.guitar.p) : ""}
+            </div>
+
+            ${pro ? sectionHtml(sel.sec) : ""}
 
             <div class="card stack">
               <h3>Sound</h3>
-              <fieldset class="field"><legend>Guitar tone</legend><div class="chips">${TONES.map((t) => `<label class="pick"><input type="radio" name="tone" value="${t.id}" ${t.id === g.tone ? "checked" : ""}><span>${t.label}</span></label>`).join("")}</div>
-                <span class="small muted">${TONES.find((t) => t.id === g.tone).hint}</span></fieldset>
-              <fieldset class="field"><legend>Drum kit</legend><div class="chips">${KITS.map((k) => `<label class="pick"><input type="radio" name="kit" value="${k.id}" ${k.id === g.kit ? "checked" : ""}><span>${k.label}</span></label>`).join("")}</div></fieldset>
-              <label class="field"><span>Tempo <b data-bpm>${g.bpm} BPM</b></span><input type="range" name="bpm" min="60" max="230" step="1" value="${g.bpm}"></label>
-              <label class="field"><span>Chords</span><select name="prog">${G().progs.map((p, i) => `<option value="${i}" ${p.name === g.prog.name ? "selected" : ""}>${p.name}</option>`).join("")}</select></label>
-              <label class="field"><span>Chorus</span><select name="chorus">${CHORUS.map((c) => `<option value="${c.id}" ${c.id === g.chorus ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>
-            </div>
-
-            <div class="card stack">
-              <div class="row-between"><h3>Beat</h3><select name="beatPreset" aria-label="Beat presets"><option value="">Presets…</option>${Object.keys(G().beats).map((n) => `<option>${n}</option>`).join("")}</select></div>
-              <p class="small muted">Tap a step to hit it, again for an accent (hi-hat: open), again to clear. One bar, four beats.</p>
-              ${DRUM_ROWS.map((r) => `<div class="step-row"><span class="step-label">${r.label}</span>${grid(r.label, g.beat[r.id], (c, i) =>
-                `<button type="button" class="step ${c === "x" ? "on" : c === "X" ? "acc" : ""} ${i % 4 === 0 ? "beat" : ""}" data-drum="${r.id}" data-i="${i}" aria-label="${r.label} step ${i + 1}: ${c === "." ? "off" : c === "x" ? "on" : r.accent || "accent"}"></button>`)}</div>`).join("")}
-            </div>
-
-            <div class="card stack">
-              <div class="row-between"><h3>Guitar riff</h3><select name="riffPreset" aria-label="Riff presets"><option value="">Presets…</option>${Object.keys(G().riffs).map((n) => `<option>${n}</option>`).join("")}</select></div>
-              <p class="small muted">Tap a step to cycle: ${RIFF_CYCLE.slice(1).map((c) => `<b>${c}</b> ${RIFF_NAMES[c]}`).join(" · ")}. The riff plays over each chord.</p>
-              <div class="step-row"><span class="step-label">Riff</span>${grid("Riff", g.riff, (c, i) =>
-                `<button type="button" class="step riff riff-${c === "." ? "rest" : c} ${i % 4 === 0 ? "beat" : ""}" data-riff="${i}" aria-label="Riff step ${i + 1}: ${RIFF_NAMES[c]}">${RIFF_GLYPH[c]}</button>`)}</div>
+              <fieldset class="field"><legend>Guitar sound</legend><div class="chips">${TONES.map((t) => `<label class="pick"><input type="radio" name="tone" value="${t.id}" ${t.id === a.tone ? "checked" : ""}><span>${t.label}</span></label>`).join("")}</div>
+                <span class="small muted">${TONES.find((t) => t.id === a.tone).hint}</span></fieldset>
+              <fieldset class="field"><legend>Drum kit</legend><div class="chips">${KITS.map((k) => `<label class="pick"><input type="radio" name="kit" value="${k.id}" ${k.id === a.kit ? "checked" : ""}><span>${k.label}</span></label>`).join("")}</div></fieldset>
+              <label class="field"><span>Speed <b data-bpm>${pro ? `${a.bpm} BPM` : `${speedWord(a.bpm)} · ${a.bpm} BPM`}</b></span><input type="range" name="bpm" min="60" max="230" step="1" value="${a.bpm}"></label>
+              ${pro
+                ? `<label class="field"><span>Key</span><select name="root">${Array.from({ length: 12 }, (_, i) => 36 + i).map((r) => `<option value="${r}" ${r === a.root ? "selected" : ""}>${NOTE_NAMES[r % 12]}</option>`).join("")}</select></label>`
+                : `<fieldset class="field"><legend>Mood</legend><div class="chips">${G.progs.map((p, i) => `<label class="pick"><input type="radio" name="mood" value="${i}" ${i === moodIndex ? "checked" : ""}><span>${p.mood}</span></label>`).join("")}</div>
+                  <span class="small muted">Sets the chords for the whole song.</span></fieldset>`}
             </div>
 
             <div class="preview-bar">
-              <button class="btn btn-primary" type="button" data-preview>${loop ? `${icon("pause")}Stop` : `${icon("play")}Hear it`}</button>
-              <div class="chips">${["Verse", "Chorus", "Both"].map((n) => `<label class="pick"><input type="radio" name="section" value="${n}" ${n === section ? "checked" : ""}><span>${n}</span></label>`).join("")}</div>
+              <button class="btn btn-primary" type="button" data-play="song">${play && play.kind === "song" ? `${icon("pause")}Stop` : `${icon("play")}Play song`}</button>
+              <button class="btn" type="button" data-play="section">${play && play.kind === "section" ? `${icon("pause")}Stop` : `${icon("play")}${secLabel(sel.sec)}`}</button>
+              <span class="small muted" data-now aria-live="off"></span>
             </div>
 
             <div class="card">
               <h3>Writing session</h3>
               <div class="chips"><span class="chip">${icon("clock")}1 day</span><span class="chip">${icon("energy")}${DATA.costs.write} energy each</span><span class="chip">${icon("record")}Creativity ${Math.round(avg("creativity"))}</span></div>
-              <p class="small muted">The band's creativity, a theme that suits the genre and a riff with some variety all raise the song's quality.</p>
+              <p class="small muted">The band's creativity, a theme that suits the genre, a mix of different samples and a vocal line all raise the song's quality${pro ? ", and so do samples you edit yourself" : ""}.</p>
             </div>
             <p class="small error" id="write-error" role="alert">${low.length ? `Too tired to write: ${low.join(", ")}.` : ""}</p>
             <button class="btn btn-primary" type="submit" ${low.length ? "disabled" : ""}>Record this song ${icon("arrow")}</button>
@@ -455,80 +530,254 @@
           <h3 class="section-title">Your songs</h3>
           <ul class="song-list">
             ${state.songs.filter((x) => !x.cover).map((x) => {
-              const gg = C.grooveFor(x, bandGenre());
+              const sa = C.arrangementFor(x, bandGenre());
               return `<li class="card song-row">
-                <span><strong>${esc(x.title)}</strong><span class="muted small">${C.GENRES[gg.genre].label} · ${TONES.find((t) => t.id === gg.tone).label} · ${gg.bpm} BPM · practised ${x.practice}/5</span></span>
+                <span><strong>${esc(x.title)}</strong><span class="muted small">${C.GENRES[sa.genre].label} · ${TONES.find((t) => t.id === sa.tone).label} · ${sa.bpm} BPM · practised ${x.practice}/5</span></span>
                 <span class="song-q" aria-label="Quality ${x.quality}"><span class="mini-meter"><i style="width:${x.quality}%"></i></span><b>${x.quality}</b></span>
               </li>`;
             }).join("")}
           </ul>
         </section>`;
       wire(el);
-      if (loop) startPlayhead();
+      if (play) startPlayhead();
     }
 
+    function libraryHtml(track, genre, current, pro, guitarP) {
+      const card = (c) => `<div class="lib-card ${c.name === current.name ? "is-on" : ""} ${play && play.kind === "clip" && play.name === c.name ? "is-playing" : ""}" data-lib="${esc(c.name)}">
+          <button type="button" class="lib-play" data-hear="${esc(c.name)}" aria-label="Hear ${esc(c.name)}">${icon(play && play.kind === "clip" && play.name === c.name ? "pause" : "play")}</button>
+          <button type="button" class="lib-use" data-use="${esc(c.name)}"><b>${esc(c.name)}</b>${C.HINTS[c.name] ? `<small>${C.HINTS[c.name]}</small>` : ""}${mini(track, c.p, guitarP)}</button>
+        </div>`;
+      if (!pro) return `<div class="lib-grid">${C.library(track, genre).map(card).join("")}</div>`;
+      // Pro: every genre's samples, the song's genre first
+      const groups = [genre, ...C.GENRE_IDS.filter((g) => g !== genre)].map((g) => [C.GENRES[g].label, C.library(track, g).filter((c) => c.from === g)]);
+      groups.push(["Any genre", C.library(track, genre).filter((c) => c.from === "any")]);
+      // the song's genre and the shared samples stay open; other genres fold away
+      return groups.filter(([, cs]) => cs.length).map(([label, cs], i) => {
+        const open = i === 0 || i === groups.length - 1 || cs.some((c) => c.name === current.name);
+        return `<details class="lib-fold" ${open ? "open" : ""}><summary class="lib-group">${label} <small>${cs.length}</small></summary><div class="lib-grid">${cs.map(card).join("")}</div></details>`;
+      }).join("");
+    }
+
+    function editorHtml(track, clip, guitarP) {
+      const head = `<div class="row-between"><h4>Edit ${esc(clip.name)}</h4><span class="small muted">${track === "vocals" ? "Two bars" : "One bar, four beats"}</span></div>`;
+      if (track === "drums") {
+        return `<div class="editor stack">${head}<p class="small muted">Tap a step: hit, accent (hi-hat: open), ghost (soft), off.</p>
+          ${C.DRUM_ROWS.map((row) => `<div class="step-row"><span class="step-label">${DRUM_LABELS[row]}</span><div class="step-grid">${[...clip.p[row]].map((c, i) =>
+            `<button type="button" class="step ${{ x: "on", X: "acc", o: "ghost" }[c] || ""} ${i % 4 === 0 ? "beat" : ""}" data-step="${row}:${i}" aria-label="${DRUM_LABELS[row]} step ${i + 1}: ${STEP_NAMES.drums[c]}"></button>`).join("")}</div></div>`).join("")}</div>`;
+      }
+      if (track === "vocals") {
+        const rows = [8, 7, 6, 5, 4, 3, 2, 1];
+        let held = 0;
+        const state2 = [...clip.p].map((c) => { if (/[1-8]/.test(c)) held = Number(c); else if (c === "_") held = 0; return { c, held }; });
+        return `<div class="editor stack">${head}<p class="small muted">Tap a box to sing that note. Higher rows are higher notes; a note lasts until the next one. The bottom row is silence.</p>
+          ${[0, 1].map((b) => `<div class="roll"><span class="roll-bar small muted">Bar ${b + 1}</span>
+            ${rows.map((d) => `<div class="roll-row"><span class="step-label">${d === 8 ? "High" : d === 1 ? "Low" : ""}</span><div class="step-grid">${Array.from({ length: 16 }, (_, i) => {
+              const k = b * 16 + i, s = state2[k], on = s.c === String(d), hold = !on && s.held === d && s.c === ".";
+              return `<button type="button" class="step ${on ? "on" : hold ? "hold" : ""} ${i % 4 === 0 ? "beat" : ""}" data-note="${d}:${k}" aria-label="Note ${d}, step ${k + 1}${on ? ", on" : ""}"></button>`;
+            }).join("")}</div></div>`).join("")}
+            <div class="roll-row"><span class="step-label">Rest</span><div class="step-grid">${Array.from({ length: 16 }, (_, i) => {
+              const k = b * 16 + i;
+              return `<button type="button" class="step rest ${state2[k].c === "_" ? "on" : ""} ${i % 4 === 0 ? "beat" : ""}" data-note="_:${k}" aria-label="Silence, step ${k + 1}"></button>`;
+            }).join("")}</div></div></div>`).join("")}</div>`;
+      }
+      if (track === "bass" && clip.p === "follow") {
+        return `<div class="editor stack">${head}<p class="small muted">This bass line copies the guitar's rhythm.</p><button class="btn" type="button" data-unfollow>Write my own bass line</button></div>`;
+      }
+      const cyc = CYCLES[track];
+      return `<div class="editor stack">${head}<p class="small muted">Tap a step to change it: ${cyc.slice(1).map((c) => `<b>${c}</b> ${STEP_NAMES[track][c]}`).join(" · ")}.</p>
+        <div class="step-row"><span class="step-label">${TRACK_INFO[track].label}</span><div class="step-grid">${[...clip.p].map((c, i) =>
+          `<button type="button" class="step riff riff-${c === "." ? "rest" : c} ${i % 4 === 0 ? "beat" : ""}" data-step="${track}:${i}" aria-label="Step ${i + 1}: ${STEP_NAMES[track][c]}">${c === "." ? "" : c}</button>`).join("")}</div></div>
+        ${track === "bass" ? `<button class="btn" type="button" data-follow>Follow the guitar</button>` : ""}</div>`;
+    }
+
+    function sectionHtml(i) {
+      const s = secOf(i), a = A_();
+      return `<div class="card stack">
+        <h3>Section: ${secLabel(i)}</h3>
+        <div class="sec-fields">
+          <label class="field"><span>Part</span><select name="secType">${C.SECTION_TYPES.map((t) => `<option ${t === s.type ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+          <label class="field"><span>Length</span><select name="secBars">${[1, 2, 4, 8].map((b) => `<option value="${b}" ${b === s.bars ? "selected" : ""}>${b} bar${b > 1 ? "s" : ""}</option>`).join("")}</select></label>
+        </div>
+        <label class="field"><span>Chords</span><select name="secProg">${C.ALL_PROGS.map((p, k) => `<option value="${k}" ${p.name === s.prog.name ? "selected" : ""}>${p.name}</option>`).join("")}</select></label>
+        <div class="chips">
+          <button class="btn btn-small" type="button" data-sec-op="left" ${i === 0 ? "disabled" : ""}>${icon("back")}Move</button>
+          <button class="btn btn-small" type="button" data-sec-op="right" ${i === a.sections.length - 1 ? "disabled" : ""}>Move${icon("arrow")}</button>
+          <button class="btn btn-small" type="button" data-sec-op="copy" ${a.sections.length >= C.MAX_SECTIONS || C.totalBars(a) + s.bars > C.MAX_BARS ? "disabled" : ""}>${icon("plus")}Duplicate</button>
+          <button class="btn btn-small btn-danger" type="button" data-sec-op="delete" ${a.sections.length <= 1 ? "disabled" : ""}>${icon("close")}Delete</button>
+        </div>
+        <p class="small muted">Up to ${C.MAX_SECTIONS} sections and ${C.MAX_BARS} bars.</p>
+      </div>`;
+    }
+
+    // ---------- editing ----------
+    function setClip(track, i, clip) {
+      sameType(i).forEach((j) => { A_().sections[j].clips[track] = { name: clip.name, p: typeof clip.p === "string" ? clip.p : { ...clip.p } }; });
+    }
+    const edited = (name) => (/\(edited\)$/.test(name) ? name : `${name.slice(0, 21)} (edited)`);
+    function editClip(fn) {
+      const { track, sec } = draft.sel, c = secOf(sec).clips[track];
+      const p = typeof c.p === "string" ? c.p : { ...c.p };
+      setClip(track, sec, { name: edited(c.name), p: fn(p) });
+    }
+    const setAt = (str, i, ch) => str.slice(0, i) + ch + str.slice(i + 1);
+
     function wire(el) {
-      const form = $("#write-form", el), g = () => draft.groove;
+      const form = $("#write-form", el), a = () => A_();
+      $("[data-mode=easy]", el).onclick = () => { state.studioPro = false; save(); render(el); };
+      $("[data-mode=pro]", el).onclick = () => { if (!proUnlocked()) return; state.studioPro = true; save(); render(el); };
       form.oninput = (e) => {
         const n = e.target.name;
         if (n === "title") draft.title = e.target.value;
-        if (n === "bpm") { g().bpm = Number(e.target.value); $("[data-bpm]", el).textContent = `${g().bpm} BPM`; }
+        if (n === "bpm") { a().bpm = Number(e.target.value); $("[data-bpm]", el).textContent = isPro() ? `${a().bpm} BPM` : `${speedWord(a().bpm)} · ${a().bpm} BPM`; }
       };
       form.onchange = (e) => {
-        const n = e.target.name, v = e.target.value;
+        const n = e.target.name, v = e.target.value, s = secOf(draft.sel.sec);
         if (n === "theme") draft.theme = v;
-        else if (n === "genre") { draft.groove = C.defaultGroove(v); render(el); }
-        else if (n === "tone" || n === "kit") { g()[n] = v; render(el); }
-        else if (n === "prog") g().prog = { ...G().progs[Number(v)] };
-        else if (n === "chorus") g().chorus = v;
-        else if (n === "beatPreset" && v) { g().beat = { ...G().beats[v] }; render(el); }
-        else if (n === "riffPreset" && v) { g().riff = G().riffs[v]; render(el); }
-        else if (n === "section") section = v;
+        else if (n === "genre") { draft.arr = C.defaultArrangement(v); draft.sel = { track: draft.sel.track, sec: 1 }; loadSounds(); render(el); }
+        else if (n === "tone" || n === "kit") { a()[n] = v; loadSounds(); render(el); }
+        else if (n === "root") a().root = Number(v);
+        else if (n === "mood") { const p = C.GENRES[a().genre].progs[Number(v)]; a().sections.forEach((x) => { x.prog = { ...p }; }); }
+        else if (n === "linked") draft.linked = e.target.checked;
+        else if (n === "secType") { s.type = v; render(el); }
+        else if (n === "secBars") {
+          const nb = Number(v);
+          if (C.totalBars(a()) - s.bars + nb > C.MAX_BARS) { toast(`Songs can be up to ${C.MAX_BARS} bars.`); return render(el); }
+          s.bars = nb; render(el);
+        }
+        else if (n === "secProg") { s.prog = { ...C.ALL_PROGS[Number(v)] }; }
       };
       form.onclick = (e) => {
-        const d = e.target.closest("[data-drum]"), r = e.target.closest("[data-riff]");
-        if (d) {
-          const row = d.dataset.drum, i = Number(d.dataset.i), cur = g().beat[row][i];
-          const nxt = { ".": "x", x: "X", X: "." }[cur];
-          g().beat[row] = g().beat[row].slice(0, i) + nxt + g().beat[row].slice(i + 1);
-          d.className = `step ${nxt === "x" ? "on" : nxt === "X" ? "acc" : ""} ${i % 4 === 0 ? "beat" : ""}`;
-          d.setAttribute("aria-label", d.getAttribute("aria-label").replace(/: .*/, `: ${nxt === "." ? "off" : nxt === "x" ? "on" : "accent"}`));
+        const t = e.target;
+        const cell = t.closest("[data-cell]"), head = t.closest("[data-sec]"), m = t.closest("[data-mute]");
+        if (m) { mute[m.dataset.mute] = !mute[m.dataset.mute]; return render(el); }
+        if (cell) { const [track, i] = cell.dataset.cell.split(":"); draft.sel = { track, sec: Number(i) }; if (play && play.kind === "section") play.sec = draft.sel.sec; return render(el); }
+        if (head) { draft.sel.sec = Number(head.dataset.sec); if (play && play.kind === "section") play.sec = draft.sel.sec; return render(el); }
+        if (t.closest("[data-add-sec]")) return addSection(el);
+        const hear = t.closest("[data-hear]"), use = t.closest("[data-use]");
+        if (hear) return hearClip(el, hear.dataset.hear);
+        if (use) return useClip(el, use.dataset.use);
+        const play_ = t.closest("[data-play]");
+        if (play_) return togglePlay(el, play_.dataset.play);
+        const op = t.closest("[data-sec-op]");
+        if (op) return sectionOp(el, op.dataset.secOp);
+        const step = t.closest("[data-step]");
+        if (step) {
+          const [row, i] = step.dataset.step.split(":"), k = Number(i), track = draft.sel.track, cyc = CYCLES[track];
+          editClip((p) => {
+            if (track === "drums") { p[row] = setAt(p[row], k, cyc[(cyc.indexOf(p[row][k]) + 1) % cyc.length]); return p; }
+            return setAt(p, k, cyc[(cyc.indexOf(p[k]) + 1) % cyc.length]);
+          });
+          return render(el);
         }
-        if (r) {
-          const i = Number(r.dataset.riff), cur = g().riff[i], nxt = RIFF_CYCLE[(RIFF_CYCLE.indexOf(cur) + 1) % RIFF_CYCLE.length];
-          g().riff = g().riff.slice(0, i) + nxt + g().riff.slice(i + 1);
-          r.className = `step riff riff-${nxt === "." ? "rest" : nxt} ${i % 4 === 0 ? "beat" : ""}`;
-          r.textContent = RIFF_GLYPH[nxt];
-          r.setAttribute("aria-label", `Riff step ${i + 1}: ${RIFF_NAMES[nxt]}`);
+        const nt = t.closest("[data-note]");
+        if (nt) {
+          const [d, i] = nt.dataset.note.split(":"), k = Number(i);
+          editClip((p) => setAt(p, k, p[k] === d ? "." : d));
+          return render(el);
         }
-        if (e.target.closest("[data-preview]")) toggle(el);
+        if (t.closest("[data-unfollow]")) { const g = secOf(draft.sel.sec).clips.guitar.p; setClip("bass", draft.sel.sec, { name: "My bass line (edited)", p: [...g].map((c) => (c === "." ? "." : c === "m" ? "m" : "r")).join("") }); return render(el); }
+        if (t.closest("[data-follow]")) { setClip("bass", draft.sel.sec, C.clipNamed("bass", "Follow guitar", a().genre)); return render(el); }
       };
       form.onsubmit = (e) => { e.preventDefault(); record(el); };
     }
 
-    async function toggle(el) {
-      if (loop) { stop(); render(el); return; }
-      await A.unlock(); applySettings();
-      const btn = $("[data-preview]", el); if (btn) btn.textContent = "Loading sounds…";
-      await A.loadInstruments(A.instrumentsFor({ groove: C.normalise(draft.groove) }));
-      loop = A.playLoop(() => {
-        const both = section === "Both";
-        return C.composeLoop(draft.groove, both ? null : section);
-      });
+    function addSection(el) {
+      const a = A_(), last = a.sections[a.sections.length - 1];
+      if (a.sections.length >= C.MAX_SECTIONS || C.totalBars(a) + 4 > C.MAX_BARS) return toast("The song is as long as it can be.");
+      // a new verse-like section built from the genre's verse samples, before the outro if there is one
+      const at = last.type === "Outro" ? a.sections.length - 1 : a.sections.length;
+      const fresh = C.defaultArrangement(a.genre).sections[1];
+      a.sections.splice(at, 0, { ...fresh, type: "Bridge", prog: { ...a.sections[Math.max(0, at - 1)].prog } });
+      draft.sel.sec = at;
       render(el);
+    }
+    function sectionOp(el, op) {
+      const a = A_(), i = draft.sel.sec, s = a.sections[i];
+      const clone = () => JSON.parse(JSON.stringify(s));
+      if (op === "left" && i > 0) { a.sections.splice(i, 1); a.sections.splice(i - 1, 0, s); draft.sel.sec = i - 1; }
+      if (op === "right" && i < a.sections.length - 1) { a.sections.splice(i, 1); a.sections.splice(i + 1, 0, s); draft.sel.sec = i + 1; }
+      if (op === "copy" && a.sections.length < C.MAX_SECTIONS && C.totalBars(a) + s.bars <= C.MAX_BARS) { a.sections.splice(i + 1, 0, clone()); draft.sel.sec = i + 1; }
+      if (op === "delete" && a.sections.length > 1) { a.sections.splice(i, 1); draft.sel.sec = Math.min(i, a.sections.length - 1); }
+      if (play && play.kind === "section") play.sec = draft.sel.sec;
+      render(el);
+    }
+
+    function useClip(el, name) {
+      const c = C.clipNamed(draft.sel.track, name, A_().genre);
+      if (!c) return;
+      setClip(draft.sel.track, draft.sel.sec, c);
+      // hear it straight away with the band, unless the whole song is already playing
+      if (!play || play.kind === "clip") startPlay(el, { kind: "section", sec: draft.sel.sec });
+      else render(el);
+    }
+    function hearClip(el, name) {
+      if (play && play.kind === "clip" && play.name === name) { stop(); return render(el); }
+      startPlay(el, { kind: "clip", name, track: draft.sel.track });
+    }
+    function togglePlay(el, kind) {
+      if (play && play.kind === kind) { stop(); return render(el); }
+      startPlay(el, kind === "song" ? { kind } : { kind, sec: draft.sel.sec });
+    }
+
+    // ---------- playback ----------
+    const audible = (arr) => ({ ...arr, events: arr.events.filter((e) => !mute[e.part]) });
+    function current() {
+      const a = A_();
+      if (play.kind === "song") return audible(C.compose({ id: "draft", title: draft.title || "Draft", arr: a }));
+      if (play.kind === "section") return audible(C.composeSection(a, Math.min(play.sec, a.sections.length - 1)));
+      const c = C.clipNamed(play.track, play.name, a.genre);
+      return C.composeClip(a, play.track, c, draft.sel.sec);
+    }
+    function loadSounds() { return A.loadInstruments(A.instrumentsFor({ groove: A_() })); }
+    async function startPlay(el, what) {
+      if (play) stop();
+      play = what;
+      await A.unlock(); applySettings();
+      render(el);
+      const now = $("[data-now]", el); if (now) now.textContent = "Loading sounds…";
+      await loadSounds();
+      if (play !== what) return;
+      play.loop = A.playLoop(current);
+      startPlayhead();
     }
     function startPlayhead() {
       cancelAnimationFrame(raf);
+      const setStep = (node, s) => { if (node) { node.style.setProperty("--s", s); node.classList.toggle("is-play", s >= 0); } };
       const tick = () => {
-        if (!loop) return;
-        const step = ((loop.position() % 16) + 16) % 16;
-        document.querySelectorAll(".step-grid").forEach((gEl) => [...gEl.children].forEach((c, i) => c.classList.toggle("now", i === step)));
+        if (!play || !play.loop) return;
+        const pos = Math.max(0, play.loop.position()), a = A_();
+        document.querySelectorAll(".mini").forEach((m) => setStep(m, -1));
+        document.querySelectorAll(".sec-head.is-now").forEach((h) => h.classList.remove("is-now"));
+        const nowText = $("[data-now]");
+        if (play.kind === "clip") {
+          const card = document.querySelector(`.lib-card[data-lib="${CSS.escape(play.name)}"] .mini`);
+          setStep(card, pos % (play.track === "vocals" ? 32 : 16));
+          if (nowText) nowText.textContent = `Hearing ${play.name}`;
+        } else {
+          let beat = pos / 4, idx = play.kind === "section" ? Math.min(play.sec, a.sections.length - 1) : 0;
+          if (play.kind === "song") { while (idx < a.sections.length - 1 && beat >= a.sections[idx].bars * 4) { beat -= a.sections[idx].bars * 4; idx++; } }
+          else beat %= a.sections[idx].bars * 4;
+          const barIn = Math.floor(beat / 4), step = Math.floor(beat * 4) % 16;
+          const head = document.querySelector(`.sec-head[data-sec="${idx}"]`);
+          if (head) head.classList.add("is-now");
+          C.TRACKS.forEach((t) => setStep(document.querySelector(`[data-cell="${t}:${idx}"] .mini`), t === "vocals" ? (barIn % 2) * 16 + step : step));
+          if (idx === draft.sel.sec) {
+            const libMini = document.querySelector(".lib-card.is-on .mini");
+            setStep(libMini, draft.sel.track === "vocals" ? (barIn % 2) * 16 + step : step);
+            document.querySelectorAll(".editor .step-grid").forEach((g, gi) => {
+              const want = draft.sel.track === "vocals" ? (Math.floor(gi / 9) === barIn % 2 ? step : -1) : step;
+              [...g.children].forEach((c, i) => c.classList.toggle("now", i === want));
+            });
+          }
+          if (nowText) nowText.textContent = `${secLabel(idx)} · bar ${Math.min(barIn + 1, a.sections[idx].bars)} of ${a.sections[idx].bars}`;
+        }
         raf = requestAnimationFrame(tick);
       };
       tick();
     }
     function stop() {
-      if (loop) { loop.stop(); loop = null; }
+      if (play && play.loop) play.loop.stop();
+      play = null;
       cancelAnimationFrame(raf);
     }
 
@@ -537,14 +786,18 @@
       if (!title) { err.textContent = "Give your song a title."; $("[name=title]", el).focus(); return; }
       if (state.songs.some((x) => x.title.toLowerCase() === title.toLowerCase())) { err.textContent = "You already have a song with that title."; return; }
       if (tired(DATA.costs.write).length) { err.textContent = "The band is too tired to write."; return; }
-      const g = C.normalise(draft.groove);
-      if (!/[xX]/.test(g.beat.kick + g.beat.snare)) { err.textContent = "The beat needs at least a kick or a snare."; return; }
-      if (!/[^.]/.test(g.riff)) { err.textContent = "The riff needs at least one note."; return; }
-      const combo = COMBOS[`${draft.theme}|${g.genre}`] || 0;
-      const variety = new Set(g.riff.replace(/\./g, "")).size * 3 + (/[xX]/.test(g.beat.hat) ? 3 : 0);
-      const quality = clamp(Math.round(avg("creativity") * 0.7 + combo + variety + Math.random() * 8), 5, 100);
+      const a = C.normaliseArr(draft.arr), silentAll = (t) => a.sections.every((s) => C.isSilent(t, s.clips[t]));
+      if (silentAll("drums")) { err.textContent = "The song needs drums somewhere."; return; }
+      if (silentAll("guitar") && silentAll("bass")) { err.textContent = "The song needs a guitar or bass part."; return; }
+      if (C.totalBars(a) > C.MAX_BARS) { err.textContent = `Songs can be up to ${C.MAX_BARS} bars.`; return; }
+      const combo = COMBOS[`${draft.theme}|${a.genre}`] || 0;
+      const names = new Set(a.sections.flatMap((s) => C.TRACKS.map((t) => `${t}:${s.clips[t].name}`)));
+      const variety = Math.min(14, names.size);
+      const vocals = silentAll("vocals") ? -6 : 4;
+      const own = a.sections.some((s) => C.TRACKS.some((t) => /\(edited\)$/.test(s.clips[t].name))) ? 5 : 0;
+      const quality = clamp(Math.round(avg("creativity") * 0.7 + combo + variety + vocals + own + Math.random() * 8), 5, 100);
       stop();
-      state.songs.push({ id: "s-" + Date.now().toString(36), title, theme: draft.theme, genre: g.genre, groove: g, quality, practice: 0 });
+      state.songs.push({ id: "s-" + Date.now().toString(36), title, theme: draft.theme, genre: a.genre, arr: a, quality, practice: 0 });
       state.members.forEach((m) => { m.energy = clamp(m.energy - DATA.costs.write); m.stats.creativity = clamp(m.stats.creativity + 1); });
       state.res.day += 1;
       commit();
@@ -801,6 +1054,11 @@
               <option value="reduce" ${S.motion === "reduce" ? "selected" : ""}>Reduce motion</option>
               <option value="full" ${S.motion === "full" ? "selected" : ""}>Full motion</option>
             </select></label>
+          <label class="field"><span>Difficulty</span>
+            <select data-difficulty>
+              <option value="normal" ${state.band.difficulty !== "hard" ? "selected" : ""}>Normal: Pro studio unlocks at fame level 3</option>
+              <option value="hard" ${state.band.difficulty === "hard" ? "selected" : ""}>Hard: Pro studio now</option>
+            </select></label>
           <details class="credits">
             <summary>Music credits</summary>
             <ul>${TRACKS.map((t) => `<li><strong>${esc(t.title)}</strong> by ${esc(t.artist)} · <a href="${t.licenseUrl}" target="_blank" rel="noopener">${esc(t.license)}</a> · <a href="${t.page}" target="_blank" rel="noopener">source</a>${t.changes ? `<br><span class="muted">${esc(t.changes)}</span>` : ""}</li>`).join("")}
@@ -812,6 +1070,7 @@
     };
     render();
     dlg.oninput = (e) => {
+      if (e.target.matches("[data-difficulty]")) { state.band.difficulty = e.target.value; save(); if (view === "music") go("music"); return; }
       const k = e.target.dataset.s;
       if (!k) return;
       S[k] = k === "motion" ? e.target.value : Number(e.target.value);
@@ -940,6 +1199,13 @@
           }).join("")}</div>
           <span class="small muted">Your songs, drums and guitar tone start from this. You can write in any genre later.</span>
         </fieldset>
+        <fieldset class="field"><legend>Difficulty</legend>
+          <div class="chips">
+            <label class="pick"><input type="radio" name="difficulty" value="normal" checked><span>Normal</span></label>
+            <label class="pick"><input type="radio" name="difficulty" value="hard"><span>Hard</span></label>
+          </div>
+          <span class="small muted">Normal: the studio starts simple and Pro tools unlock as you get famous. Hard: Pro studio from day one and gigs start on Hard.</span>
+        </fieldset>
         <button class="btn btn-primary" type="submit">Start in the garage ${icon("arrow")}</button>
       </form>`;
     dlg.onclick = (e) => { if (e.target === dlg || e.target.closest("[data-close]")) dlg.close(); };
@@ -948,7 +1214,7 @@
       const f = new FormData(e.target);
       const name = String(f.get("name") || "").trim() || DATA.band.name;
       dlg.close();
-      onDone(name, f.get("genre"));
+      onDone(name, f.get("genre"), f.get("difficulty") === "hard" ? "hard" : "normal");
     };
     dlg.showModal();
   }
@@ -971,9 +1237,10 @@
     cont.textContent = hasSave ? `Continue · Day ${state.res.day}` : "Continue";
     cont.onclick = enterGame;
     $("#title-new").onclick = () => {
-      const start = () => openBandSetup((name, genre) => {
+      const start = () => openBandSetup((name, genre, difficulty) => {
         const keep = state.settings; state = fresh(); state.settings = keep;
-        state.band = { name, genre };
+        state.band = { name, genre, difficulty };
+        if (difficulty === "hard") state.next.difficulty = "hard";
         enterGame();
       });
       hasSave ? confirmAction("Start a new game?", "Your saved band will be replaced.", "Start over", start) : start();
