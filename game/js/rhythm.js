@@ -19,9 +19,12 @@ window.AmpedRhythm = (() => {
     const arr = track ? null : C.compose(opts.song, opts.bandGenre);
     const bpm = track ? track.meta.bpm : arr.bpm;
     const spb = 60 / bpm;
+    // an AI recording of a studio song (opts.ai = { buffer, offset }): the chart still comes from the arrangement
+    const ai = !track && opts.ai ? opts.ai : null;
     const footLabel = track
       ? `Cover · ${esc(track.meta.title)} by ${esc(track.meta.artist)} (${esc(track.meta.license)})`
-      : `Placeholder music · ${esc(arr.key)} · ${bpm} BPM`;
+      : ai ? `AI recording · ${esc(arr.key)} · ${bpm} BPM` : `Band demo · ${esc(arr.key)} · ${bpm} BPM`;
+    const lyrics = opts.song.lyrics || {};
     const offset = (opts.settings.offsetMs || 0) / 1000;
     const keys = opts.settings.keys || lanes.map((l) => l.key);
 
@@ -46,6 +49,7 @@ window.AmpedRhythm = (() => {
           <div class="rh-hitline"></div>
           <div class="rh-notes" aria-hidden="true"></div>
         </div>
+        <div class="rh-lyric" aria-live="off"><span data-lyric-now></span><small data-lyric-next></small></div>
         <div class="rh-foot"><span><span data-time></span> · <span data-section></span></span><span class="rh-temp">${footLabel}</span></div>
         <div class="rh-overlay" hidden></div>
       </div>`;
@@ -68,13 +72,17 @@ window.AmpedRhythm = (() => {
     const firstBeat = track ? track.meta.firstBeat : 0;   // recordings start a little before beat 1
     const notes = chart.map((n) => ({ ...n, t: songStart + firstBeat + n.beat * spb, el: null, done: false }));
     const lastT = notes.length ? notes[notes.length - 1].t : songStart;
-    const songEnd = songStart + (track ? track.meta.duration : arr.beats * spb);
-    // generated songs get stick clicks in the count-in; recordings get a silent visual count
-    const music = track ? A.playBuffer(track.buffer, songStart) : A.playArrangement(arr, t0, R.countIn);
-    const stopMusic = () => music.stop();
+    const songEnd = songStart + (track ? track.meta.duration : ai ? Math.max(arr.beats * spb, ai.buffer.duration - ai.offset) : arr.beats * spb);
+    // generated songs get stick clicks in the count-in; covers get a silent visual count;
+    // AI recordings get the clicks, then the recording starts so its first beat lands on beat 1
+    let music, sticks = null;
+    if (track) music = A.playBuffer(track.buffer, songStart);
+    else if (ai) { sticks = A.playArrangement({ ...arr, events: [] }, t0, R.countIn); music = A.playBuffer(ai.buffer, songStart - ai.offset, Math.max(0, ai.offset - (songStart - A.now()))); }
+    else music = A.playArrangement(arr, t0, R.countIn);
+    const stopMusic = () => { music.stop(); if (sticks) sticks.stop(); };
 
     const st = { score: 0, streak: 0, maxStreak: 0, crowd: opts.crowdStart || R.crowd.start, counts: { perfect: 0, great: 0, good: 0, miss: 0 }, paused: false, over: false };
-    let raf = 0, finishTimer = 0, lastSection = "";
+    let raf = 0, finishTimer = 0, lastSection = "", lyricNow = null;
 
     // ---------- judging ----------
     const inputTime = () => A.now() - offset;
@@ -175,6 +183,12 @@ window.AmpedRhythm = (() => {
       const sec = arr && arr.sections.filter((x) => x.beat <= beatNow).pop();
       const secName = beatNow < 0 ? "Count-in" : sec ? sec.name : track ? "Live" : "";
       scene.setBeat(beatNow, spb, secName || "Live");
+      if (arr && sec) {
+        // karaoke: this bar's line, and the next one
+        const si = arr.sections.indexOf(sec), lines = lyrics[si] || [], bar = Math.floor((beatNow - sec.beat) / 4);
+        const now = lines[bar] || "", next = lines[bar + 1] || "";
+        if (now !== lyricNow) { lyricNow = now; $("[data-lyric-now]").textContent = now; $("[data-lyric-next]").textContent = next; }
+      }
       if (secName !== lastSection) { lastSection = secName; $("[data-section]").textContent = secName; }
       if (vis > Math.max(lastT, songEnd) + 0.6 && !finishTimer) finishTimer = setTimeout(finish, 400);
       raf = requestAnimationFrame(frame);

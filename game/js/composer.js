@@ -195,6 +195,38 @@ window.AmpedComposer = (() => {
         section("Verse", 4, prog, v, genre), section("Chorus", 4, prog, c, genre), section("Outro", 1, prog, outro, genre)]
     });
   }
+  // Effects and feel. Every value is 0..1. Drive follows the guitar sound unless changed.
+  const TONE_DRIVE = { clean: 0.05, crunch: 0.45, dist: 0.65, metal: 0.85, synth: 0.15 };
+  const GENRE_FX = {
+    metal: { guitar: { tone: 0.55, reverb: 0.15, delay: 0 }, bass: { drive: 0.45, tone: 0.55 }, drums: { room: 0.2, punch: 0.75 }, vocals: { reverb: 0.3, echo: 0.1 }, feel: { swing: 0, tight: 0.95 } },
+    rock: { guitar: { tone: 0.5, reverb: 0.25, delay: 0.05 }, bass: { drive: 0.3, tone: 0.45 }, drums: { room: 0.35, punch: 0.55 }, vocals: { reverb: 0.35, echo: 0.15 }, feel: { swing: 0.05, tight: 0.75 } },
+    punk: { guitar: { tone: 0.6, reverb: 0.1, delay: 0 }, bass: { drive: 0.4, tone: 0.6 }, drums: { room: 0.25, punch: 0.6 }, vocals: { reverb: 0.2, echo: 0.05 }, feel: { swing: 0, tight: 0.7 } },
+    pop: { guitar: { tone: 0.6, reverb: 0.3, delay: 0.15 }, bass: { drive: 0.1, tone: 0.4 }, drums: { room: 0.25, punch: 0.5 }, vocals: { reverb: 0.4, echo: 0.25 }, feel: { swing: 0.1, tight: 0.9 } },
+    indie: { guitar: { tone: 0.65, reverb: 0.45, delay: 0.3 }, bass: { drive: 0.15, tone: 0.5 }, drums: { room: 0.45, punch: 0.4 }, vocals: { reverb: 0.5, echo: 0.3 }, feel: { swing: 0.05, tight: 0.65 } },
+    electronic: { guitar: { tone: 0.55, reverb: 0.35, delay: 0.35 }, bass: { drive: 0.2, tone: 0.55 }, drums: { room: 0.2, punch: 0.7 }, vocals: { reverb: 0.45, echo: 0.35 }, feel: { swing: 0.15, tight: 1 } }
+  };
+  function defaultFx(genre, tone) {
+    const d = GENRE_FX[genre] || GENRE_FX.rock;
+    return { guitar: { drive: TONE_DRIVE[tone] ?? 0.5, ...d.guitar }, bass: { ...d.bass }, drums: { ...d.drums }, vocals: { ...d.vocals }, feel: { ...d.feel } };
+  }
+  function normFx(fx, genre, tone) {
+    const d = defaultFx(genre, tone), out = {};
+    Object.keys(d).forEach((k) => { out[k] = {}; Object.keys(d[k]).forEach((f) => { const v = fx && fx[k] && fx[k][f]; out[k][f] = typeof v === "number" && isFinite(v) ? clampN(v, 0, 1) : d[k][f]; }); });
+    return out;
+  }
+  // Swing moves every off-beat eighth (and the sixteenths around it) later, up to a full triplet feel.
+  function applyFeel(events, feel) {
+    const sw = (feel && feel.swing) || 0;
+    if (!sw) return events;
+    const mid = 0.5 + sw / 6;
+    events.forEach((e) => {
+      const n = Math.floor(e.beat + 1e-6), p = e.beat - n;
+      if (p < 1e-6) return;
+      e.beat = n + (p <= 0.5 ? (p / 0.5) * mid : mid + ((p - 0.5) / 0.5) * (1 - mid));
+    });
+    return events;
+  }
+
   const MAX_SECTIONS = 12, MAX_BARS = 48;
   // Fills in anything missing, so saved songs keep working as the format grows.
   function normaliseArr(a) {
@@ -206,10 +238,11 @@ window.AmpedComposer = (() => {
       clips: Object.fromEntries(TRACKS.map((t) => [t, normClip(t, s.clips && s.clips[t], genre, "Silent")]))
     }));
     if (!sections.length) sections = defaultArrangement(genre).sections;
+    const tone = TONES.includes(a.tone) ? a.tone : G.tone;
     return {
       v: 2, genre,
       bpm: clampN(Math.round(a.bpm || G.bpm), 60, 230),
-      tone: TONES.includes(a.tone) ? a.tone : G.tone,
+      tone, fx: normFx(a.fx, genre, tone),
       kit: ["power", "standard", "electronic"].includes(a.kit) ? a.kit : G.kit,
       root: clampN(Math.round(a.root || G.root), 36, 47),
       sections
@@ -367,6 +400,7 @@ window.AmpedComposer = (() => {
     add("drums", beat, 0.5, "kick", { vel: 1, accent: true });
     add("bass", beat, 2, "note", { midi: note(0, 0) - (a.root >= 43 ? 12 : 0), accent: true });
     add("guitar", beat, 2.5, "power", { midi: note(0, 1), accent: true });
+    applyFeel(events, a.fx.feel);
     events.sort((x, y) => x.beat - y.beat);
     const first = a.sections[0].prog;
     return { title: song.title, genre: a.genre, groove: a, bpm: a.bpm, root: a.root, mode: first.mode, key: keyName(a.root, first.mode), beats: beat + 2, sections, events };
@@ -378,6 +412,7 @@ window.AmpedComposer = (() => {
     const sec = a.sections[index] || a.sections[0], events = [];
     const add = (part, beat, dur, kind, extra) => events.push({ part, beat, dur, kind, vel: 0.8, accent: false, ...extra });
     renderSection(a, sec, 0, add, { next: true, crashIn: true, only: o.only });
+    applyFeel(events, a.fx.feel);
     events.sort((x, y) => x.beat - y.beat);
     return { genre: a.genre, groove: a, bpm: a.bpm, beats: sec.bars * 4, sections: [], events };
   }
@@ -389,6 +424,7 @@ window.AmpedComposer = (() => {
     const add = (part, beat, dur, kind, extra) => events.push({ part, beat, dur, kind, vel: 0.8, accent: false, ...extra });
     // bass "follow" needs the guitar's rhythm but plays alone
     renderSection(a, sec, 0, add, { next: false, crashIn: false, only: [track] });
+    applyFeel(events, a.fx.feel);
     events.sort((x, y) => x.beat - y.beat);
     return { genre: a.genre, groove: a, bpm: a.bpm, beats: 8, sections: [], events };
   }
@@ -464,7 +500,7 @@ window.AmpedComposer = (() => {
 
   return {
     GENRES, GENRE_IDS, TRACKS, SECTION_TYPES, DRUM_ROWS, HINTS, ALL_PROGS, MAX_SECTIONS, MAX_BARS,
-    library, allClips, clipNamed, isSilent, normPattern, defaultArrangement, normaliseArr, arrangementFor, totalBars, keyName,
+    library, allClips, clipNamed, isSilent, normPattern, defaultArrangement, defaultFx, TONE_DRIVE, normaliseArr, arrangementFor, totalBars, keyName,
     compose, composeSection, composeClip, chart, trackChart
   };
 })();

@@ -72,7 +72,7 @@ button, input, select { font: inherit; color: inherit; }
 .field { display: flex; flex-direction: column; gap: 8px; border: 0; padding: 0; margin: 0; min-width: 0; }
 .field > span, .field legend { font-size: 14px; color: var(--muted); padding: 0; display: flex; justify-content: space-between; }
 .field b { color: var(--cream); }
-input[type=text], input:not([type]), input[name=title], select { min-height: var(--touch); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+input[type=text], input:not([type]), input[name=title], select, textarea { min-height: var(--touch); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
 input[type=range] { width: 100%; accent-color: var(--yellow); min-height: 32px; }
 .pick { position: relative; cursor: pointer; }
 .pick input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
@@ -506,3 +506,22 @@ body.on-stage { overflow: hidden; }
 @keyframes fan-jump { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(-7%); } }
 @keyframes fist { from { transform: translateY(-30%) scaleY(1.25); } to { transform: translateY(-55%) scaleY(1.35); } }
 .reduce-motion .rh-crowd-fg .fan, .reduce-motion .rh-crowd-fg .arm { animation: none; }
+
+/* ---------- studio effects ---------- */
+.fx-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.fx-group { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px 10px; margin: 0; display: grid; gap: 8px; }
+.fx-group legend { font-weight: 700; font-size: 14px; padding: 0 4px; }
+.fx-knob { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; column-gap: 8px; font-size: 13px; }
+.fx-knob input { width: 100%; accent-color: var(--yellow); }
+.fx-knob small { grid-column: 2; display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: -4px; }
+.fx-knob small i { font-style: normal; }
+
+/* gig lyrics, karaoke style, above the footer */
+.rh-lyric { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); width: min(90%, 560px); text-align: center; pointer-events: none; z-index: 6; display: grid; gap: 2px; }
+.rh-lyric span { font-weight: 800; font-size: clamp(16px, 2.6vw, 24px); color: var(--cream); text-shadow: 0 2px 8px rgba(0, 0, 0, .8); }
+.rh-lyric small { font-size: 13px; color: var(--muted); text-shadow: 0 1px 6px rgba(0, 0, 0, .8); }
+.rh-lyric span:empty, .rh-lyric small:empty { display: none; }
+/* studio lyrics */
+.lyrics-card h3 { display: flex; align-items: center; gap: 8px; }
+.lyrics-card textarea { width: 100%; resize: vertical; font: inherit; line-height: 1.5; }
+.ai-take { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

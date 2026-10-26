@@ -418,6 +418,14 @@
     guitar: { ".": "rest", m: "chug (palm mute)", P: "power chord", H: "high note", L: "lead lick", A: "arpeggio" },
     bass: { ".": "rest", r: "root", f: "fifth", o: "octave", m: "short muted note" }
   };
+  // effects and feel sliders: [key, label, low end, high end]
+  const FX_UI = [
+    ["guitar", "Guitar", [["drive", "Drive", "Clean", "Heavy"], ["tone", "Tone", "Dark", "Bright"], ["reverb", "Reverb", "Dry", "Big hall"], ["delay", "Echo", "None", "Lots"]]],
+    ["bass", "Bass", [["drive", "Grit", "Clean", "Dirty"], ["tone", "Tone", "Deep", "Bright"]]],
+    ["drums", "Drums", [["room", "Room", "Tight", "Arena"], ["punch", "Punch", "Soft", "Smack"]]],
+    ["vocals", "Vocals", [["reverb", "Reverb", "Dry", "Big hall"], ["echo", "Echo", "None", "Lots"]]],
+    ["feel", "Feel", [["swing", "Swing", "Straight", "Shuffle"], ["tight", "Timing", "Loose", "Tight"]]]
+  ];
   const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const COMBOS = { "Rebellion|punk": 16, "Rebellion|metal": 16, "Rebellion|rock": 12, "Heartbreak|indie": 14, "Heartbreak|rock": 10, "Party|pop": 14, "Party|electronic": 14, "Love|pop": 10 };
   const PRO_FAME = 3;
@@ -455,8 +463,8 @@
     const bandGenre = () => state.band.genre || "rock";
     const isPro = () => proUnlocked() && (state.studioPro ?? state.band.difficulty === "hard");
     function reset(genre) {
-      const keep = draft ? { title: draft.title, theme: draft.theme } : { title: "", theme: "Rebellion" };
-      draft = { ...keep, arr: C.defaultArrangement(genre || bandGenre()), sel: { track: "drums", sec: 1 }, linked: true };
+      const keep = draft ? { title: draft.title, theme: draft.theme, about: draft.about } : { title: "", theme: "Rebellion", about: "" };
+      draft = { ...keep, arr: C.defaultArrangement(genre || bandGenre()), sel: { track: "drums", sec: 1 }, linked: true, lyrics: {} };
     }
     const A_ = () => draft.arr;
     const secOf = (i) => A_().sections[i];
@@ -483,7 +491,7 @@
           </div>
           <p class="small muted">${pro
             ? "Pro: edit every sample step by step, add and move sections, pick chords and key."
-            : `Pick a sample for each track in each part of the song. No music theory needed.${proUnlocked() ? "" : ` Pro tools unlock at fame level ${PRO_FAME}, or straight away on Hard difficulty (Settings).`}`}</p>
+            : `Pick a sample for each track in each part of the song, then tweak it if you like. No music theory needed.${proUnlocked() ? "" : ` Pro tools unlock at fame level ${PRO_FAME}, or straight away on Hard difficulty (Settings).`}`}</p>
           <form class="stack" id="write-form" novalidate>
             <label class="field"><span>Song title</span><input name="title" maxlength="40" autocomplete="off" placeholder="Name your song" value="${esc(draft.title)}"></label>
             <fieldset class="field"><legend>Theme</legend><div class="chips">${DATA.songwriting.themes.map((t) => `<label class="pick"><input type="radio" name="theme" value="${t}" ${t === draft.theme ? "checked" : ""}><span>${t}</span></label>`).join("")}</div></fieldset>
@@ -513,7 +521,7 @@
                 <label class="check"><input type="checkbox" name="linked" ${draft.linked ? "checked" : ""}><span>Same for every ${sec.type}</span></label></div>
               <p class="small muted">${icon("play")} hears a sample on its own. Tap its name to use it here.</p>
               ${libraryHtml(sel.track, a.genre, clip, pro, sec.clips.guitar.p)}
-              ${pro ? editorHtml(sel.track, clip, sec.clips.guitar.p) : ""}
+              ${pro || draft.tweak ? editorHtml(sel.track, clip, sec.clips.guitar.p) : `<button class="btn" type="button" data-tweak>${icon("settings")}Tweak ${esc(clip.name)}</button>`}
             </div>
 
             ${pro ? sectionHtml(sel.sec) : ""}
@@ -529,6 +537,15 @@
                 : `<fieldset class="field"><legend>Mood</legend><div class="chips">${G.progs.map((p, i) => `<label class="pick"><input type="radio" name="mood" value="${i}" ${i === moodIndex ? "checked" : ""}><span>${p.mood}</span></label>`).join("")}</div>
                   <span class="small muted">Sets the chords for the whole song.</span></fieldset>`}
             </div>
+
+            <div class="card stack fx-card">
+              <div class="row-between"><h3>Effects &amp; feel</h3><button class="btn btn-small" type="button" data-fx-reset>Reset to ${C.GENRES[a.genre].label}</button></div>
+              <p class="small muted">Changes are heard straight away while the song plays.</p>
+              <div class="fx-groups">${FX_UI.map(([k, label, knobs]) => `<fieldset class="fx-group"><legend>${label}</legend>${knobs.map(([f, name, lo, hi]) => `
+                <label class="fx-knob"><span>${name}</span><input type="range" min="0" max="100" step="1" value="${Math.round(a.fx[k][f] * 100)}" data-fx="${k}.${f}" aria-label="${label} ${name.toLowerCase()}"><small><i>${lo}</i><i>${hi}</i></small></label>`).join("")}</fieldset>`).join("")}</div>
+            </div>
+
+            ${lyricsHtml()}
 
             <div class="preview-bar">
               <button class="btn btn-primary" type="button" data-play="song">${play && play.kind === "song" ? `${icon("pause")}Stop` : `${icon("play")}Play song`}</button>
@@ -549,7 +566,7 @@
             ${state.songs.filter((x) => !x.cover).map((x) => {
               const sa = C.arrangementFor(x, bandGenre());
               return `<li class="card song-row">
-                <span><strong>${esc(x.title)}</strong><span class="muted small">${C.GENRES[sa.genre].label} · ${TONES.find((t) => t.id === sa.tone).label} · ${sa.bpm} BPM · practised ${x.practice}/5</span></span>
+                <span><strong>${esc(x.title)}</strong><span class="muted small">${C.GENRES[sa.genre].label} · ${TONES.find((t) => t.id === sa.tone).label} · ${sa.bpm} BPM${x.ai ? " · AI vocals" : x.lyrics && Object.keys(x.lyrics).length ? " · lyrics" : ""} · practised ${x.practice}/5</span></span>
                 <span class="song-q" aria-label="Quality ${x.quality}"><span class="mini-meter"><i style="width:${x.quality}%"></i></span><b>${x.quality}</b></span>
               </li>`;
             }).join("")}
@@ -557,6 +574,90 @@
         </section>`;
       wire(el);
       if (play) startPlayhead();
+    }
+
+    // ---------- lyrics and the AI recording ----------
+    const aiCfg = () => (window.AMPED_CONFIG && window.AMPED_CONFIG.ai) || {};
+    const aiReady = () => !!(aiCfg().url && aiCfg().anonKey);
+    const sungSections = () => A_().sections.map((s, i) => i).filter((i) => !C.isSilent("vocals", secOf(i).clips.vocals));
+    const lyricLines = (i) => String((draft.lyrics || {})[i] || "").split("\n").map((x) => x.trim()).filter(Boolean);
+    // what the AI is asked to record: the song's sound in words, section by section
+    function brief() {
+      const a = C.normaliseArr(A_()), G = C.GENRES[a.genre], fx = a.fx, first = a.sections[0].prog;
+      const describe = (t, clip) => `${TRACK_INFO[t].label.toLowerCase()}: ${(C.HINTS[clip.name.replace(/ \(edited\)$/, "")] || clip.name).toLowerCase()}`;
+      const styles = [
+        { clean: "clean electric guitars", crunch: "crunchy overdriven guitars", dist: "distorted punk guitars", metal: "high-gain metal guitars, palm-muted riffs", synth: "synth leads instead of guitars" }[a.tone],
+        { power: "big rock drum kit", standard: "tight acoustic drum kit", electronic: "electronic drum machine" }[a.kit],
+        fx.guitar.drive > 0.75 ? "heavy distortion" : fx.guitar.drive < 0.2 ? "clean tone" : "",
+        fx.guitar.reverb > 0.6 || fx.vocals.reverb > 0.6 ? "big reverb" : "", fx.guitar.delay > 0.5 ? "guitar delay echoes" : "", fx.vocals.echo > 0.5 ? "echoing vocals" : "",
+        fx.feel.swing > 0.4 ? "swing feel" : "", fx.feel.tight > 0.85 ? "tight, precise playing" : fx.feel.tight < 0.5 ? "loose, raw playing" : "",
+        fx.drums.room > 0.65 ? "arena drum sound" : "", fx.bass.drive > 0.6 ? "dirty driven bass" : ""
+      ].filter(Boolean);
+      return {
+        title: draft.title.trim() || "Untitled", theme: draft.theme, about: draft.about || "", genre: G.label, bpm: a.bpm,
+        key: C.keyName(a.root, first.mode), mood: (G.progs.find((p) => p.name === first.name) || {}).mood || "", styles,
+        sections: a.sections.map((sec, i) => ({
+          name: secLabel(i), type: sec.type, bars: sec.bars, vocals: !C.isSilent("vocals", sec.clips.vocals), lines: lyricLines(i),
+          styles: C.TRACKS.filter((t) => !C.isSilent(t, sec.clips[t])).map((t) => describe(t, sec.clips[t])).slice(0, 4)
+        }))
+      };
+    }
+    const takeIsCurrent = () => draft.ai && draft.ai.sig === JSON.stringify(brief());
+    async function callAI(mode, body) {
+      const cfg = aiCfg();
+      const r = await fetch(cfg.url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.anonKey}`, apikey: cfg.anonKey }, body: JSON.stringify({ mode, ...body }) });
+      const out = await r.json().catch(() => ({ error: "The AI studio sent a bad reply." }));
+      if (!r.ok || out.error) throw new Error(out.error || `The AI studio said ${r.status}.`);
+      return out;
+    }
+    function lyricsHtml() {
+      const sung = sungSections(), ready = aiReady(), busy = draft.aiBusy;
+      return `<div class="card stack lyrics-card">
+        <h3>${icon("mic")}Lyrics &amp; vocals</h3>
+        <label class="field"><span>What's the song about?</span><textarea name="about" rows="2" maxlength="400" placeholder="e.g. our van breaks down on the way to the first festival">${esc(draft.about || "")}</textarea></label>
+        <button class="btn" type="button" data-ai-lyrics ${ready && !busy ? "" : "disabled"}>${icon("chat")}${busy === "lyrics" ? "Writing…" : "Write lyrics with AI"}</button>
+        ${sung.length ? sung.map((i) => `<label class="field"><span>${secLabel(i)} <small class="muted">· ${secOf(i).bars} line${secOf(i).bars > 1 ? "s" : ""}, one per bar</small></span>
+          <textarea data-lyric="${i}" rows="${Math.min(8, secOf(i).bars)}" maxlength="900">${esc((draft.lyrics || {})[i] || "")}</textarea></label>`).join("")
+          : `<p class="small muted">No section has a vocal sample yet. Pick one on the Vocals track to sing in it.</p>`}
+        <button class="btn btn-primary" type="button" data-ai-song ${ready && !busy && sung.some((i) => lyricLines(i).length) ? "" : "disabled"}>${icon("record")}${busy === "song" ? "Recording… about a minute" : "Record it with AI vocals"}</button>
+        ${draft.ai ? `<div class="ai-take ${takeIsCurrent() ? "" : "is-stale"}"><button class="btn" type="button" data-ai-hear>${icon(aiPreview ? "pause" : "play")}${aiPreview ? "Stop" : "Hear the AI take"}</button>
+          <span class="small ${takeIsCurrent() ? "muted" : "error"}">${takeIsCurrent() ? "This take is saved with the song and played at gigs." : "You changed the song since this take. Record again to keep it in sync."}</span></div>` : ""}
+        <p class="small ${draft.aiError ? "error" : "muted"}" role="status">${draft.aiError ? esc(draft.aiError) : ready
+          ? "The AI writes lyrics from your theme. Edit them freely. The AI recording plays your tempo, key, sound and structure and sings your lyrics."
+          : "AI lyrics and vocals aren't connected yet. You can still write lyrics here."}</p>
+      </div>`;
+    }
+    let aiPreview = null;
+    function stopAiPreview() { if (aiPreview) { aiPreview.stop(); aiPreview = null; } }
+    async function writeLyrics(el) {
+      draft.aiBusy = "lyrics"; draft.aiError = ""; render(el);
+      try {
+        const out = await callAI("lyrics", brief());
+        draft.lyrics = { ...(draft.lyrics || {}) };
+        out.sections.forEach((s) => { draft.lyrics[s.index] = s.lines.join("\n"); });
+      } catch (e) { draft.aiError = e.message; }
+      draft.aiBusy = ""; render(el);
+    }
+    async function recordAI(el) {
+      stop(); stopAiPreview();
+      draft.aiBusy = "song"; draft.aiError = ""; render(el);
+      try {
+        const b = brief(), out = await callAI("song", b);
+        await A.unlock();
+        const buffer = await A.load(out.url);
+        // line the recording up with the song: kick and snare times of the first 16 bars
+        const arr = C.compose({ id: "draft", title: b.title, arr: A_() }), spb = 60 / arr.bpm;
+        const hits = arr.events.filter((e) => e.part === "drums" && (e.kind === "kick" || e.kind === "snare" || e.kind === "clap") && e.beat < 64).map((e) => e.beat * spb);
+        draft.ai = { url: out.url, offset: A.alignOffset(buffer, hits), duration: buffer.duration, sig: JSON.stringify(b) };
+      } catch (e) { draft.aiError = e.message; }
+      draft.aiBusy = ""; render(el);
+    }
+    async function hearAI(el) {
+      if (aiPreview) { stopAiPreview(); return render(el); }
+      stop();
+      try { await A.unlock(); applySettings(); aiPreview = A.playBuffer(await A.load(draft.ai.url), A.now() + 0.05); }
+      catch (e) { draft.aiError = "Couldn't load the AI take."; }
+      render(el);
     }
 
     function libraryHtml(track, genre, current, pro, guitarP) {
@@ -645,13 +746,21 @@
       form.oninput = (e) => {
         const n = e.target.name;
         if (n === "title") draft.title = e.target.value;
+        if (n === "about") draft.about = e.target.value;
+        if (e.target.dataset.lyric) { draft.lyrics = { ...(draft.lyrics || {}), [e.target.dataset.lyric]: e.target.value }; }
         if (n === "bpm") { a().bpm = Number(e.target.value); $("[data-bpm]", el).textContent = isPro() ? `${a().bpm} BPM` : `${speedWord(a().bpm)} · ${a().bpm} BPM`; }
+        const fx = e.target.dataset.fx;
+        if (fx) {
+          const [k, f] = fx.split(".");
+          a().fx[k][f] = Number(e.target.value) / 100;
+          if (play && play.loop && play.loop.setFx) play.loop.setFx(a().fx);
+        }
       };
       form.onchange = (e) => {
         const n = e.target.name, v = e.target.value, s = secOf(draft.sel.sec);
         if (n === "theme") draft.theme = v;
         else if (n === "genre") { draft.arr = C.defaultArrangement(v); draft.sel = { track: draft.sel.track, sec: 1 }; loadSounds(); render(el); }
-        else if (n === "tone" || n === "kit") { a()[n] = v; loadSounds(); render(el); }
+        else if (n === "tone" || n === "kit") { a()[n] = v; if (n === "tone") a().fx.guitar.drive = C.TONE_DRIVE[v]; if (play && play.loop) play.loop.setFx(a().fx); loadSounds(); render(el); }
         else if (n === "root") a().root = Number(v);
         else if (n === "mood") { const p = C.GENRES[a().genre].progs[Number(v)]; a().sections.forEach((x) => { x.prog = { ...p }; }); }
         else if (n === "linked") draft.linked = e.target.checked;
@@ -667,9 +776,14 @@
         const t = e.target;
         const cell = t.closest("[data-cell]"), head = t.closest("[data-sec]"), m = t.closest("[data-mute]");
         if (m) { mute[m.dataset.mute] = !mute[m.dataset.mute]; return render(el); }
-        if (cell) { const [track, i] = cell.dataset.cell.split(":"); draft.sel = { track, sec: Number(i) }; if (play && play.kind === "section") play.sec = draft.sel.sec; return render(el); }
+        if (cell) { const [track, i] = cell.dataset.cell.split(":"); draft.sel = { track, sec: Number(i) }; draft.tweak = false; if (play && play.kind === "section") play.sec = draft.sel.sec; return render(el); }
         if (head) { draft.sel.sec = Number(head.dataset.sec); if (play && play.kind === "section") play.sec = draft.sel.sec; return render(el); }
         if (t.closest("[data-add-sec]")) return addSection(el);
+        if (t.closest("[data-fx-reset]")) { a().fx = C.defaultFx(a().genre, a().tone); if (play && play.loop) play.loop.setFx(a().fx); return render(el); }
+        if (t.closest("[data-tweak]")) { draft.tweak = true; return render(el); }
+        if (t.closest("[data-ai-lyrics]")) return writeLyrics(el);
+        if (t.closest("[data-ai-song]")) return recordAI(el);
+        if (t.closest("[data-ai-hear]")) return hearAI(el);
         const hear = t.closest("[data-hear]"), use = t.closest("[data-use]");
         if (hear) return hearClip(el, hear.dataset.hear);
         if (use) return useClip(el, use.dataset.use);
@@ -796,6 +910,7 @@
       if (play && play.loop) play.loop.stop();
       play = null;
       cancelAnimationFrame(raf);
+      if (aiPreview) { aiPreview.stop(); aiPreview = null; }
     }
 
     function record(el) {
@@ -814,7 +929,10 @@
       const own = a.sections.some((s) => C.TRACKS.some((t) => /\(edited\)$/.test(s.clips[t].name))) ? 5 : 0;
       const quality = clamp(Math.round(avg("creativity") * 0.7 + combo + variety + vocals + own + Math.random() * 8), 5, 100);
       stop();
-      state.songs.push({ id: "s-" + Date.now().toString(36), title, theme: draft.theme, genre: a.genre, arr: a, quality, practice: 0 });
+      const lyrics = {};
+      sungSections().forEach((i) => { if (lyricLines(i).length) lyrics[i] = lyricLines(i); });
+      const ai = takeIsCurrent() ? { url: draft.ai.url, offset: draft.ai.offset, duration: draft.ai.duration } : null;
+      state.songs.push({ id: "s-" + Date.now().toString(36), title, theme: draft.theme, about: draft.about || "", genre: a.genre, arr: a, lyrics, ai, quality: clamp(quality + (Object.keys(lyrics).length ? 4 : 0) + (ai ? 6 : 0), 5, 100), practice: 0 });
       state.members.forEach((m) => { m.energy = clamp(m.energy - DATA.costs.write); m.stats.creativity = clamp(m.stats.creativity + 1); });
       state.res.day += 1;
       commit();
@@ -992,8 +1110,13 @@
         return;
       }
     }
+    let ai = null;
+    if (s.ai && s.ai.url) {
+      try { ai = { buffer: await A.load(s.ai.url), offset: s.ai.offset || 0 }; }
+      catch (err) { toast("Couldn't load the AI recording, so the band plays it live."); }
+    }
     window.AmpedRhythm.start(layer, {
-      song: s, track, role: n.role, roleLabel: m.roleLabel, difficulty: n.difficulty,
+      song: s, track, ai, role: n.role, roleLabel: m.roleLabel, difficulty: n.difficulty,
       skill: m.stats.skill, crowdStart: crowdStart(s), tough: venue.tough, venueName: venue.name, bandGenre: state.band.genre, capacity: venue.capacity,
       settings: state.settings, scene, members: members(),
       onFinish: (r) => showResults(applyGig(gigId, s, n, r), r, s),

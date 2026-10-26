@@ -72,7 +72,8 @@ window.AmpedAudio = (() => {
       single: { clean: "guitar-clean", crunch: "guitar-od", dist: "guitar-dist", metal: "guitar-dist", synth: "saw-lead" }[tone],
       clean: "guitar-clean",
       bass: g.genre === "electronic" ? "synth-bass" : "bass-pick",
-      voice: "voice-lead", choir: "voice-choir"
+      voice: "voice-lead", choir: "voice-choir",
+      tight: g.fx && g.fx.feel ? g.fx.feel.tight : 0.8
     };
   }
   const SETUP_KEYS = ["kit", "keys", "chord", "single", "clean", "bass", "voice", "choir"];
@@ -95,7 +96,7 @@ window.AmpedAudio = (() => {
   // balanced by measuring each part solo (tools: render previews); the soundfont samples are quiet
   const SAMPLE_LEVELS = { drums: 1.6, bass: 3.2, guitar: 7.2, keys: 10, vocals: 10.5 };
   // guitar tones differ a lot in loudness; measured per tone so the mix stays balanced
-  const TONE_LEVEL = { clean: 1, crunch: 0.68, dist: 0.85, metal: 0.72, synth: 1 };
+  const TONE_LEVEL = { clean: 0.93, crunch: 0.49, dist: 0.46, metal: 0.72, synth: 1 };
 
   function createBand(c, out, noiseBuffer, setup) {
     const comp = c.createDynamicsCompressor();
@@ -114,13 +115,36 @@ window.AmpedAudio = (() => {
     const verbOut = c.createGain(); verbOut.gain.value = 0.22;
     verb.connect(verbOut); verbOut.connect(comp);
 
-    const parts = {};
+    const parts = {}, vbus = {};
     Object.entries(LEVELS).forEach(([name, level]) => {
       const g = c.createGain(); g.gain.value = level; g.connect(comp);
       const sg = c.createGain(); sg.gain.value = SAMPLE_LEVELS[name]; sg.connect(g);   // samples sit at their own level
       parts[name] = { gain: g, sgain: sg, level };
+      // each part's reverb sends pass through its own bus, so the studio can set how much reverb it gets
+      vbus[name] = c.createGain(); vbus[name].connect(verb);
     });
-    const send = (node, amount) => { const s = c.createGain(); s.gain.value = amount; node.connect(s); s.connect(verb); };
+    const send = (node, amount, part) => { const s = c.createGain(); s.gain.value = amount; node.connect(s); s.connect(vbus[part] || verb); };
+
+    // echo: a dotted-eighth delay with darkening repeats, fed by the guitar and the vocals
+    const delay = c.createDelay(2), fb = c.createGain(), fbLp = c.createBiquadFilter(), delayOut = c.createGain();
+    fb.gain.value = 0.38; fbLp.type = "lowpass"; fbLp.frequency.value = 3200; delayOut.gain.value = 0.7; delay.delayTime.value = 0.33;
+    delay.connect(fbLp); fbLp.connect(fb); fb.connect(delay); delay.connect(delayOut); delayOut.connect(comp);
+    const dsend = {};
+    ["guitar", "vocals"].forEach((n) => { dsend[n] = c.createGain(); dsend[n].gain.value = 0; parts[n].gain.connect(dsend[n]); dsend[n].connect(delay); });
+
+    // bass: clean and driven paths blended, then a tone filter
+    const bass = { dry: c.createGain(), pre: c.createGain(), shaper: c.createWaveShaper(), post: c.createGain(), lp: c.createBiquadFilter() };
+    const soft = new Float32Array(2049);
+    for (let i = 0; i < soft.length; i++) { const x = i / 1024 - 1; soft[i] = Math.tanh(x * 3) / Math.tanh(3); }
+    bass.shaper.curve = soft; bass.shaper.oversample = "2x"; bass.lp.type = "lowpass"; bass.lp.Q.value = 0.7;
+    parts.bass.sgain.disconnect();
+    parts.bass.sgain.connect(bass.dry); parts.bass.sgain.connect(bass.pre); bass.pre.connect(bass.shaper); bass.shaper.connect(bass.post);
+    bass.dry.connect(bass.lp); bass.post.connect(bass.lp); bass.lp.connect(parts.bass.gain);
+
+    // drums: a bus compressor; more punch = more squeeze and more level
+    const drumComp = c.createDynamicsCompressor(), drumMake = c.createGain();
+    drumComp.attack.value = 0.012; drumComp.release.value = 0.12; drumComp.knee.value = 6;
+    parts.drums.sgain.disconnect(); parts.drums.sgain.connect(drumComp); drumComp.connect(drumMake); drumMake.connect(parts.drums.gain);
 
     // distortion curve for the guitar
     const curve = new Float32Array(2049);   // odd length: silence in -> exactly 0 out
@@ -149,7 +173,9 @@ window.AmpedAudio = (() => {
     }
 
     // ---- sampled voices ----
-    const rnd = (a) => (Math.random() * 2 - 1) * a;
+    // timing and level humanising; a tighter feel plays closer to the grid
+    const loose = 0.35 + (1 - (setup && setup.tight != null ? setup.tight : 0.8)) * 1.8;
+    const rnd = (a) => (Math.random() * 2 - 1) * a * loose;
     function sample(id, midi, t, dur, level, dest, o = {}) {
       const e = inst[id];
       if (!e || !e.ok || !e.notes || !e.notes.length) return false;
@@ -168,7 +194,7 @@ window.AmpedAudio = (() => {
       let last = g;
       if (o.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = o.pan; g.connect(p); last = p; }
       last.connect(dest);
-      if (o.send) send(last, o.send);
+      if (o.send) send(last, o.send, o.part);
       if (o.vibrato && dur > 0.35) {
         const lfo = c.createOscillator(), depth = c.createGain();
         lfo.frequency.value = 5.2; depth.gain.setValueAtTime(0, t); depth.gain.linearRampToValueAtTime(src.playbackRate.value * 0.007, t + 0.3);
@@ -188,28 +214,64 @@ window.AmpedAudio = (() => {
       let last = g;
       if (o.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = o.pan; g.connect(p); last = p; }
       last.connect(parts.drums.sgain);
-      if (o.send) send(last, o.send);
+      if (o.send) send(last, o.send, "drums");
       src.start(t + rnd(0.003), offsetOf(s.buffer));
       return true;
     }
     const metal = setup && setup.tone === "metal";
     const lowGuitar = (m) => { const lo = metal ? 33 : 38; while (m > lo + 19) m -= 12; while (m < lo) m += 12; return m; };
-    // metal: an extra high-gain stage after the distorted samples, with a tight low end and forward mids
+    // guitar amp for every guitar sound: drive into a soft clipper, then a speaker cabinet
+    // (tight low end, mid voicing, presence, steep top roll-off). Drive and tone come from the studio.
     let guitarIn = parts.guitar.sgain;
     if (setup) parts.guitar.sgain.gain.value = SAMPLE_LEVELS.guitar * (TONE_LEVEL[setup.tone] || 1);
     if (setup && setup.tone === "metal") parts.vocals.sgain.gain.value = SAMPLE_LEVELS.vocals * 1.35;   // sing over the wall of guitars
-    if (metal) {
-      const pre = c.createGain(); pre.gain.value = 2.6;
-      const shaper = c.createWaveShaper(); const k = new Float32Array(2049);
-      for (let i = 0; i < k.length; i++) { const x = i / 1024 - 1; k[i] = Math.tanh(x * 4); }
-      shaper.curve = k; shaper.oversample = "4x";
-      const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 95;
-      const mid = c.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 2200; mid.gain.value = 5; mid.Q.value = 0.9;
-      const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6500;
-      const post = c.createGain(); post.gain.value = 0.2;
-      pre.connect(shaper); shaper.connect(hp); hp.connect(mid); mid.connect(lp); lp.connect(post); post.connect(parts.guitar.sgain);
-      guitarIn = pre;
+    const amp = {};
+    if (setup && setup.tone !== "synth") {
+      amp.pre = c.createGain();
+      amp.shaper = c.createWaveShaper();
+      const k = new Float32Array(4097);
+      for (let i = 0; i < k.length; i++) { const x = i / 2048 - 1; k[i] = Math.tanh(x * 3) / Math.tanh(3); }
+      amp.shaper.curve = k; amp.shaper.oversample = "4x";
+      const f = (type, freq, q, gain) => { const n = c.createBiquadFilter(); n.type = type; n.frequency.value = freq; if (q) n.Q.value = q; if (gain) n.gain.value = gain; return n; };
+      amp.hp = f("highpass", metal ? 95 : 75, 0.7);
+      amp.thump = f("peaking", 120, 1.1, 2.5);
+      amp.mid = f("peaking", 700, 0.8, 0);
+      amp.presence = f("peaking", 2600, 0.9, 3);
+      amp.cab1 = f("lowpass", 5200, 0.9);
+      amp.cab2 = f("lowpass", 6200, 0.6);
+      amp.post = c.createGain();
+      amp.pre.connect(amp.shaper); amp.shaper.connect(amp.hp); amp.hp.connect(amp.thump); amp.thump.connect(amp.mid);
+      amp.mid.connect(amp.presence); amp.presence.connect(amp.cab1); amp.cab1.connect(amp.cab2); amp.cab2.connect(amp.post); amp.post.connect(parts.guitar.sgain);
+      guitarIn = amp.pre;
     }
+    // input gain into the clipper for a drive amount, and the output gain that keeps loudness steady
+    const drivePre = (d) => 0.25 + d * d * 7;
+    // measured: guitar loudness at drive 0, .25, .5, .75, 1 (tools: render each tone solo), evened out
+    const POST_FIX = [6.7, 2.5, 1.04, 0.88, 1.06];
+    const drivePost = (d) => {
+      const x = drivePre(d) * 3 * 0.12, base = 1 / (0.12 * 3 * (x < 1 ? 1 : Math.pow(x, 0.85))) * 0.12;
+      const i = Math.min(3, Math.floor(d * 4)), f = d * 4 - i;
+      return base * (POST_FIX[i] + (POST_FIX[i + 1] - POST_FIX[i]) * f);
+    };
+    function setFx(fx, spb) {
+      if (!fx) return;
+      const t = c.currentTime, to = (param, v) => param.setTargetAtTime(v, t, 0.04);
+      const G = fx.guitar, B = fx.bass, D = fx.drums, V = fx.vocals;
+      if (amp.pre) {
+        to(amp.pre.gain, drivePre(G.drive)); to(amp.post.gain, drivePost(G.drive));
+        to(amp.mid.gain, metal ? -5 + G.tone * 2 : (G.tone - 0.5) * 4);
+        to(amp.presence.gain, -4 + G.tone * 10);
+        to(amp.cab1.frequency, 3400 + G.tone * 4200); to(amp.cab2.frequency, 4200 + G.tone * 5000);
+      }
+      to(vbus.guitar.gain, G.reverb / 0.25); to(vbus.vocals.gain, V.reverb / 0.35); to(vbus.drums.gain, D.room / 0.3); to(vbus.bass.gain, B.drive * 0.2);
+      to(dsend.guitar.gain, G.delay * 0.55); to(dsend.vocals.gain, V.echo * 0.5);
+      if (spb) to(delay.delayTime, Math.min(1.9, spb * 0.75));
+      to(bass.dry.gain, 1 - B.drive * 0.6); to(bass.pre.gain, 1 + B.drive * 10); to(bass.post.gain, B.drive * 0.5);
+      to(bass.lp.frequency, 900 + B.tone * 4500);
+      to(drumComp.threshold, -6 - D.punch * 22); to(drumComp.ratio, 1.5 + D.punch * 5); to(drumMake.gain, 1 + D.punch * 0.35);
+    }
+    setFx({ guitar: { drive: setup ? ({ clean: 0.05, crunch: 0.45, dist: 0.65, metal: 0.85 }[setup.tone] ?? 0.5) : 0.5, tone: 0.5, reverb: 0.25, delay: 0 },
+      bass: { drive: 0.2, tone: 0.5 }, drums: { room: 0.3, punch: 0.5 }, vocals: { reverb: 0.35, echo: 0.1 } }, 0.5);
     let crashSide = 1;
     const sampled = setup ? {
       kick: (e, t) => hit("kick", t, e.vel),
@@ -223,10 +285,10 @@ window.AmpedAudio = (() => {
       bass: (e, t, spb) => sample(setup.bass, e.midi, t + rnd(0.004), e.dur * spb * 0.95, 1 + rnd(0.08), parts.bass.sgain, { release: 0.06, lowpass: 3500 }),
       guitar(e, t, spb) {
         const dur = e.dur * spb;
-        if (e.kind === "pluck") return sample(setup.tone === "clean" ? setup.clean : setup.single, e.midi, t + rnd(0.006), dur, 0.9, guitarIn, { release: 0.35, pan: 0.3, send: 0.25 });
-        if (e.kind === "synth") return sample("saw-lead", e.midi, t, dur * 0.9, 1.1, parts.guitar.sgain, { release: 0.08, pan: 0.2, send: 0.25, lowpass: 5000 });
+        if (e.kind === "pluck") return sample(setup.tone === "clean" ? setup.clean : setup.single, e.midi, t + rnd(0.006), dur, 0.9, guitarIn, { release: 0.35, pan: 0.3, send: 0.25, part: "guitar" });
+        if (e.kind === "synth") return sample("saw-lead", e.midi, t, dur * 0.9, 1.1, parts.guitar.sgain, { release: 0.08, pan: 0.2, send: 0.25, lowpass: 5000, part: "guitar" });
         const muted = e.kind === "mute", single = e.kind === "note", m = lowGuitar(e.midi);
-        const o = muted ? { release: 0.04, lowpass: metal ? 1900 : 1500 } : { release: 0.1, lowpass: 6500 };
+        const o = muted ? { release: 0.04, lowpass: metal ? 1900 : 1500 } : { release: 0.1, lowpass: 6500, send: 0.12, part: "guitar" };
         const d = muted ? (metal ? 0.09 : 0.11) : dur, lvl = muted ? 0.75 : 0.95;
         // double-tracked: two takes panned wide, slightly apart in time and tuning
         const take = (pan, delay, cents) => {
@@ -245,15 +307,15 @@ window.AmpedAudio = (() => {
       },
       keys(e, t, spb) {
         const dur = e.dur * spb, organ = setup.keys === "organ", pad = setup.keys === "pad" && e.kind === "pad";
-        const o = { attack: pad ? 0.2 : organ ? 0.02 : 0.003, release: pad ? 0.6 : organ ? 0.12 : 0.4, pan: 0.25, send: pad ? 0.4 : 0.2 };
+        const o = { attack: pad ? 0.2 : organ ? 0.02 : 0.003, release: pad ? 0.6 : organ ? 0.12 : 0.4, pan: 0.25, send: pad ? 0.4 : 0.2, part: "keys" };
         let ok = true;
         const inst = e.kind === "arp" && setup.keys === "pad" ? "saw-lead" : setup.keys;
         (e.notes || [e.midi]).forEach((m) => { ok = sample(inst, m, t + rnd(0.005), dur, e.kind === "pad" ? 0.55 : 0.7 * e.vel, parts.keys.sgain, o) && ok; });
         // backing "aahs" under chorus chords
-        if (e.kind === "pad") (e.notes || []).forEach((m) => sample(setup.choir, m, t, dur, 0.28, parts.vocals.sgain, { attack: 0.15, release: 0.4, pan: -0.3, send: 0.45 }));
+        if (e.kind === "pad") (e.notes || []).forEach((m) => sample(setup.choir, m, t, dur, 0.28, parts.vocals.sgain, { attack: 0.15, release: 0.4, pan: -0.3, send: 0.45, part: "vocals" }));
         return ok;
       },
-      vocals: (e, t, spb) => sample(setup.voice, e.midi, t + rnd(0.01), e.dur * spb, 0.9, parts.vocals.sgain, { attack: 0.03, release: 0.18, send: 0.35, vibrato: true }),
+      vocals: (e, t, spb) => sample(setup.voice, e.midi, t + rnd(0.01), e.dur * spb, 0.9, parts.vocals.sgain, { attack: 0.03, release: 0.18, send: 0.35, vibrato: true, part: "vocals" }),
       sticks: (t, accent) => hit("rim", t, accent ? 0.9 : 0.6)
     } : null;
 
@@ -334,7 +396,7 @@ window.AmpedAudio = (() => {
       return play[key](e, t, spb);
     }
     return {
-      parts, schedule, sticks: (t, accent) => (sampled && sampled.sticks(t, accent)) || play.sticks(t, accent),
+      parts, schedule, setFx, sticks: (t, accent) => (sampled && sampled.sticks(t, accent)) || play.sticks(t, accent),
       // the player's part drops out for a moment after a miss
       duck(part) {
         const p = parts[part]; if (!p) return;
@@ -358,6 +420,7 @@ window.AmpedAudio = (() => {
     ensure();
     const band = createBand(ctx, musicBus, noiseBuf, setupFor(arr));
     const spb = 60 / arr.bpm;
+    band.setFx(arr.groove && arr.groove.fx, spb);
     for (let b = 0; b < countIn; b++) band.sticks(startAt + b * spb, b === 0);
     const songStart = startAt + countIn * spb;
     let i = 0, stopped = false;
@@ -388,6 +451,7 @@ window.AmpedAudio = (() => {
     const fresh = () => {
       const k = JSON.stringify(setupFor(arr));
       if (k !== key) { if (band) band.fadeOut(); band = createBand(ctx, musicBus, noiseBuf, setupFor(arr)); key = k; }
+      band.setFx(arr.groove && arr.groove.fx, 60 / arr.bpm);
     };
     fresh();
     const pump = () => {
@@ -410,6 +474,8 @@ window.AmpedAudio = (() => {
     const timer = setInterval(pump, 30);
     return {
       stop() { stopped = true; clearInterval(timer); band.fadeOut(); },
+      // effects changes are heard straight away, not on the next pass
+      setFx(fx) { band.setFx(fx, 60 / arr.bpm); },
       position() { const spb = 60 / arr.bpm; return Math.floor(((ctx.currentTime - cycleStart) / spb) * 4); }
     };
   }
@@ -421,6 +487,7 @@ window.AmpedAudio = (() => {
     await loadInstruments(instrumentsFor(arr));
     const oc = new OfflineAudioContext(2, Math.ceil(seconds * sampleRate), sampleRate);
     const band = createBand(oc, oc.destination, makeNoise(oc), setupFor(arr));
+    band.setFx(arr.groove && arr.groove.fx, spb);
     for (let b = 0; b < countIn; b++) band.sticks(0.1 + b * spb, b === 0);
     const songStart = 0.1 + countIn * spb;
     arr.events.forEach((e) => band.schedule(e, songStart + e.beat * spb, spb));
@@ -443,13 +510,33 @@ window.AmpedAudio = (() => {
 
   // Plays a decoded recording at an exact audio-clock time. A miss muffles it briefly,
   // since a mixed recording has no separate instrument to drop out.
-  function playBuffer(buffer, startAt) {
+  // Where the music's first beat falls in a recording: slides the song's kick and snare times
+  // (seconds from beat 1) across the recording's onset curve and keeps the best match.
+  function alignOffset(buffer, hitTimes, maxOffset = 3) {
+    const d = buffer.getChannelData(0), hop = Math.round(buffer.sampleRate * 0.01), n = Math.floor(d.length / hop);
+    const env = new Float32Array(n);
+    let prev = 0;
+    for (let i = 0; i < n; i++) {
+      let e = 0;
+      for (let j = i * hop; j < (i + 1) * hop; j++) e += d[j] * d[j];
+      e = Math.sqrt(e / hop); env[i] = Math.max(0, e - prev); prev = e;
+    }
+    let best = 0, bestScore = -1;
+    for (let o = -0.2; o <= maxOffset; o += 0.01) {
+      let score = 0;
+      for (const t of hitTimes) { const k = Math.round((t + o) * 100); if (k > 0 && k < n - 1) score += Math.max(env[k - 1], env[k], env[k + 1]); }
+      if (score > bestScore) { bestScore = score; best = o; }
+    }
+    return Math.round(best * 1000) / 1000;
+  }
+
+  function playBuffer(buffer, startAt, from = 0) {
     ensure();
     const src = ctx.createBufferSource(); src.buffer = buffer;
     const tone = ctx.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 20000;
     const g = ctx.createGain();
     src.connect(tone); tone.connect(g); g.connect(musicBus);
-    src.start(startAt);
+    src.start(Math.max(startAt, ctx.currentTime), Math.max(0, from + Math.max(0, ctx.currentTime - startAt)));
     return {
       duck() {
         const t = ctx.currentTime;
@@ -495,5 +582,5 @@ window.AmpedAudio = (() => {
     boo() { ensure(); tone(ctx.currentTime, 110, "sawtooth", 0.12, 0.9); }
   };
 
-  return { unlock, setVolumes, now, suspend, resume, playArrangement, playLoop, renderOffline, loadInstruments, instrumentsFor, load, playBuffer, click, sfx };
+  return { unlock, setVolumes, now, suspend, resume, playArrangement, playLoop, renderOffline, loadInstruments, instrumentsFor, load, playBuffer, alignOffset, click, sfx };
 })();
