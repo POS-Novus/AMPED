@@ -70,7 +70,7 @@
     if (!c) return {};
     const o = c.looks.find((x) => x.id === L.look) || c.looks[0];
     const guest = c.id !== m.id;
-    return { name: c.name, sprite: o.sprite, aspect: o.aspect, character: c.id, outfit: o.outfit,
+    return { name: c.name, sprite: o.sprite, aspect: o.aspect, character: c.id, outfit: o.outfit, guest, family: c.family, lookId: o.id,
       ...(guest ? { bio: `${c.name} plays ${m.roleLabel.toLowerCase()} now. ${familyName(c.family)} style, all the way.` } : {}) };
   }
   const members = () => state.members.map((m) => { const base = { ...def(m.id), ...m }; return { ...base, ...lookOf(base) }; });
@@ -1303,6 +1303,8 @@
   }
   async function boot() {
     try { TRACKS = await fetch("assets/music/index.json").then((r) => r.json()); } catch { TRACKS = []; }
+    // animated performances made from Runway clips (tools/prepare_animations.py); optional
+    try { window.AMPED_ANIMS = (await fetch("assets/characters/anim/index.json").then((r) => r.json())).clips || {}; } catch { window.AMPED_ANIMS = {}; }
     applySettings();
     matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", applySettings);
     const hasSave = !!load();

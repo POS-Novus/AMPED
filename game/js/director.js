@@ -55,6 +55,7 @@ window.AmpedDirector = (() => {
       return `translate(-50%, -50%) translate(${tx}%, ${ty}%) scale(${p.s})`;
     };
 
+    let roarTimer = 0;
     let anim = null, nextCut = -Infinity, last = "", lastBeat = -1, section = "";
     function cut(p, beats, push = 1.07, drift = 0) {
       if (anim) anim.cancel();
@@ -95,6 +96,7 @@ window.AmpedDirector = (() => {
         const chorus = name === "Chorus";
         if (name !== section) {
           section = name;
+          crowdEl.classList.toggle("pump", chorus || name === "Solo");
           cut(name === "Outro" ? shot.establish() : shot.wide(), chorus ? 4 : 6, 1.1, chorus ? 0 : 2);
           flash(chorus ? 0.6 : 0.35);
           nextCut = Math.floor(beat) + (chorus ? 4 : 6);
@@ -110,6 +112,12 @@ window.AmpedDirector = (() => {
         }
       },
       flash,
+      // the crowd throws fists up and jumps for a couple of beats
+      crowdRoar() {
+        if (o.reduced) return;
+        crowdEl.classList.remove("roar"); void crowdEl.getBoundingClientRect(); crowdEl.classList.add("roar");
+        clearTimeout(roarTimer); roarTimer = setTimeout(() => crowdEl.classList.remove("roar"), o.spb * 4000);
+      },
       pause() { if (anim) anim.pause(); },
       resume() { if (anim) anim.play(); },
       stop() { if (anim) anim.cancel(); }

@@ -28,6 +28,7 @@ The game also pauses when the tab is hidden or the window loses focus.
 | `js/audio.js` | Web Audio clock, synth band for generated songs, recorded-song playback, metronome, SFX |
 | `assets/instruments/` | Sampled band instruments (drum kits, guitars, bass, piano, organ, voices) rendered by `tools/render_instruments.py` |
 | `assets/music/` | Licensed recordings + auto-charts (none at the moment; pipeline in `tools/prepare_music.py`) |
+| `js/props.js` | Instruments drawn in code for players whose art lacks one: drum kit (every drummer), slung guitar/bass, keyboard on a stand, mic stand |
 | `js/scene.js` | Backdrop + band placement + ambience (rain, light flicker, dust, notes) |
 | `js/director.js` | Gig camera: beat-timed cuts between wide, close-up, two-shot and crowd shots with push-ins, genre-coloured lights, foreground crowd |
 | `js/rhythm.js` | Chart generation, judging on the audio clock, HUD, pause, fail |
@@ -69,7 +70,7 @@ To rebuild the assets: `python3 tools/prepare_assets.py` from the repository roo
 
 ### Remaining (not done)
 - **Music**: songs are generated and played on sampled instruments. The lead voice sings a melody on an "ooh/aah" sound; real lyrics need a singer or commissioned songs. Commissioned songs with stems can use `tools/prepare_music.py`. Each song has its own key, tempo, structure and melody, and the chart follows the part you play; a miss ducks your part. Real recorded songs, hand-authored charts, SFX and voices are still needed for release.
-- **Animation**: characters are static cutouts; the gig camera, lights and crowd move, the players don't. Tribe characters have no instrument in their art yet. Needed: idle, play, celebrate, tired, frustrated poses or rigs; seated drummer + kit; portrait expressions.
+- **Animation**: each cutout is rigged in three soft-edged layers (legs, torso, head) moved on the beat: knee bounce, headbang, sway, jumps into the chorus, drumsticks hitting a drawn kit. Arms and hands can't move without new art: clips made in Runway replace the rig per character (see `design/animations/README.md`). No clips have been made yet. Needed: idle, play, celebrate, tired, frustrated poses or rigs; seated drummer + kit; portrait expressions.
 - **Story**: Moira tutorial, uncle's note, choices (story-cast sheet needs individual portrait crops).
 - **Gear shop** (locked screen only), HQ tiers, venue-specific events, multiplayer, accounts. Venue scenes are crops of the concept sheets, not production backdrops.
 - **Rhythm**: sustain notes (only a cyan tail exists in the kit), per-lane tail colours, gear effects on timing.

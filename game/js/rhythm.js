@@ -111,7 +111,7 @@ window.AmpedRhythm = (() => {
         st.score += R.points[grade] * mult;
         A.sfx.hit(n.lane);
         effect(n.lane, grade);
-        if (st.streak % 10 === 0) { scene.cheerAll(); director.flash(0.3); }
+        if (st.streak % 10 === 0) { scene.cheerAll(); scene.fist(); director.flash(0.3); director.crowdRoar(); }
       }
       // bigger venues are less forgiving: misses cost more
       st.crowd = Math.max(0, Math.min(100, st.crowd + R.crowd[grade] * (grade === "miss" ? opts.tough || 1 : 1)));
@@ -174,6 +174,7 @@ window.AmpedRhythm = (() => {
       director.update(beatNow);
       const sec = arr && arr.sections.filter((x) => x.beat <= beatNow).pop();
       const secName = beatNow < 0 ? "Count-in" : sec ? sec.name : track ? "Live" : "";
+      scene.setBeat(beatNow, spb, secName || "Live");
       if (secName !== lastSection) { lastSection = secName; $("[data-section]").textContent = secName; }
       if (vis > Math.max(lastT, songEnd) + 0.6 && !finishTimer) finishTimer = setTimeout(finish, 400);
       raf = requestAnimationFrame(frame);
